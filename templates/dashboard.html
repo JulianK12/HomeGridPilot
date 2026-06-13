@@ -34,7 +34,7 @@
       overflow: hidden;
     }
 
-    /* ── Sidebar ── */
+    /* sidebar */
     .sidebar {
       width: var(--sidebar);
       min-width: var(--sidebar);
@@ -55,7 +55,7 @@
       background: linear-gradient(135deg, var(--accent), var(--accent2));
       border-radius: 10px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 18px; flex-shrink: 0;
+      font-size: 16px; font-weight: 700; color: #fff; flex-shrink: 0;
     }
     .sidebar-logo .brand { font-size: 15px; font-weight: 700; line-height: 1.2; }
     .sidebar-logo .brand span { display: block; font-size: 11px; font-weight: 400; color: var(--muted); }
@@ -72,7 +72,6 @@
     }
     .nav-item:hover { background: var(--surface2); color: var(--text); }
     .nav-item.active { background: rgba(249,115,22,.15); color: var(--accent); }
-    .nav-item .nav-icon { font-size: 16px; width: 20px; text-align: center; }
     .nav-badge {
       margin-left: auto;
       background: var(--accent);
@@ -102,7 +101,7 @@
     .user-role { font-size: 11px; color: var(--muted); }
     .logout-btn { font-size: 16px; color: var(--muted); cursor: pointer; }
 
-    /* ── Main ── */
+    /* main */
     .main {
       flex: 1;
       display: flex;
@@ -139,11 +138,11 @@
       flex: 1; overflow-y: auto; padding: 24px;
     }
 
-    /* ── Views ── */
+    /* views */
     .view { display: none; }
     .view.active { display: block; }
 
-    /* ── Summary Cards ── */
+    /* summary cards */
     .summary-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
       gap: 14px; margin-bottom: 24px;
@@ -154,10 +153,10 @@
     }
     .summary-card .label { font-size: 12px; color: var(--muted); font-weight: 500; margin-bottom: 8px; }
     .summary-card .value { font-size: 26px; font-weight: 700; line-height: 1; }
-    .summary-card .unit  { font-size: 13px; color: var(--muted); margin-left: 3px; }
+    .summary-card .unit { font-size: 13px; color: var(--muted); margin-left: 3px; }
     .summary-card .trend { font-size: 11px; color: var(--success); margin-top: 6px; }
 
-    /* ── Device Grid ── */
+    /* device grid */
     .section-header {
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 14px;
@@ -184,13 +183,21 @@
       margin-bottom: 16px;
     }
     .device-name { font-size: 15px; font-weight: 600; }
-    .device-ip   { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .device-ip { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .badge-pv {
+      margin-left: 6px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 10px; font-weight: 700;
+      border-radius: 20px; padding: 1px 7px;
+      vertical-align: middle;
+    }
 
     .status-dot {
       width: 9px; height: 9px; border-radius: 50%;
       background: var(--muted); margin-top: 4px; flex-shrink: 0;
     }
-    .status-dot.online  { background: var(--success); box-shadow: 0 0 6px var(--success); }
+    .status-dot.online { background: var(--success); box-shadow: 0 0 6px var(--success); }
     .status-dot.offline { background: var(--danger); }
 
     .power-big {
@@ -238,7 +245,7 @@
     .btn-delete {
       margin-left: auto;
       background: none; border: none; color: var(--muted);
-      cursor: pointer; font-size: 16px; padding: 4px;
+      cursor: pointer; font-size: 12px; font-weight: 500; padding: 6px 10px;
       border-radius: 6px; transition: color .12s, background .12s;
     }
     .btn-delete:hover { color: var(--danger); background: rgba(248,81,73,.1); }
@@ -254,15 +261,14 @@
     /* Mini sparkline */
     .sparkline-wrap { height: 40px; margin: 10px 0 0; }
 
-    /* ── Empty State ── */
+    /* empty state */
     .empty-state {
       text-align: center; padding: 60px 20px; color: var(--muted);
     }
-    .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
     .empty-state h3 { font-size: 18px; color: var(--text); margin-bottom: 8px; }
-    .empty-state p  { font-size: 14px; max-width: 300px; margin: 0 auto 20px; }
+    .empty-state p { font-size: 14px; max-width: 300px; margin: 0 auto 20px; }
 
-    /* ── Analytics View ── */
+    /* analytics view */
     .analytics-layout {
       display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
     }
@@ -275,7 +281,7 @@
     .chart-card .chart-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
     .chart-wrap { position: relative; height: 200px; }
 
-    /* ── Settings View ── */
+    /* settings view */
     .settings-section {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 14px; margin-bottom: 18px; overflow: hidden;
@@ -291,9 +297,9 @@
     }
     .settings-row:last-child { border-bottom: none; }
     .settings-row .s-title { font-size: 14px; font-weight: 500; }
-    .settings-row .s-desc  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .settings-row .s-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
-    /* ── Modal ── */
+    /* modal */
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,.6);
       display: flex; align-items: center; justify-content: center;
@@ -309,7 +315,7 @@
     }
     .modal-overlay.show .modal { transform: translateY(0); }
     .modal h2 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
-    .modal p  { font-size: 13px; color: var(--muted); margin-bottom: 22px; }
+    .modal p { font-size: 13px; color: var(--muted); margin-bottom: 22px; }
 
     .form-field { margin-bottom: 16px; }
     .form-field label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .05em; }
@@ -324,7 +330,7 @@
 
     .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
 
-    /* ── Chart Modal ── */
+    /* chart modal */
     .chart-modal-wrap { position: relative; height: 260px; margin-top: 10px; }
 
     /* Toast */
@@ -340,7 +346,7 @@
       max-width: 280px;
     }
     .toast.success { border-color: var(--success); }
-    .toast.error   { border-color: var(--danger); }
+    .toast.error { border-color: var(--danger); }
     @keyframes slideUp { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
 
     /* Scrollbar */
@@ -351,29 +357,29 @@
 </head>
 <body>
 
-<!-- ── Sidebar ── -->
+<!-- sidebar -->
 <aside class="sidebar">
   <div class="sidebar-logo">
-    <div class="icon">⚡</div>
+    <div class="icon">S</div>
     <div class="brand">Shelly<span>Smart Dashboard</span></div>
   </div>
 
   <nav class="nav">
     <div class="nav-section">Übersicht</div>
     <div class="nav-item active" onclick="showView('dashboard', this)">
-      <span class="nav-icon">🏠</span> Dashboard
+      Dashboard
       <span class="nav-badge" id="deviceCount">0</span>
     </div>
     <div class="nav-item" onclick="showView('analytics', this)">
-      <span class="nav-icon">📊</span> Auswertung
+      Auswertung
     </div>
 
     <div class="nav-section" style="margin-top:10px">Verwaltung</div>
     <div class="nav-item" onclick="showView('devices', this)">
-      <span class="nav-icon">🔌</span> Geräte
+      Geräte
     </div>
     <div class="nav-item" onclick="showView('settings', this)">
-      <span class="nav-icon">⚙️</span> Einstellungen
+      Einstellungen
     </div>
   </nav>
 
@@ -389,7 +395,7 @@
   </div>
 </aside>
 
-<!-- ── Main ── -->
+<!-- main -->
 <main class="main">
 
   <!-- Topbar -->
@@ -399,14 +405,14 @@
       <div class="subtitle" id="viewSubtitle">Übersicht aller verbundenen Shelly-Geräte</div>
     </div>
     <div class="topbar-actions">
-      <button class="btn btn-ghost" onclick="refreshAll()">🔄 Aktualisieren</button>
-      <button class="btn btn-primary" onclick="openAddModal()">＋ Gerät hinzufügen</button>
+      <button class="btn btn-ghost" onclick="refreshAll()">Aktualisieren</button>
+      <button class="btn btn-primary" onclick="openAddModal()">+ Gerät hinzufügen</button>
     </div>
   </div>
 
   <div class="content">
 
-    <!-- ── Dashboard View ── -->
+    <!-- dashboard view -->
     <div class="view active" id="view-dashboard">
       <div class="summary-grid" id="summaryGrid">
         <div class="summary-card">
@@ -431,13 +437,13 @@
           <div class="trend" id="s-price-time" style="color:var(--muted)"></div>
         </div>
         <div class="summary-card" id="pvSummaryCard" style="display:none">
-          <div class="label">☀️ PV-Erzeugung</div>
+          <div class="label">PV-Erzeugung</div>
           <div class="value"><span id="s-pv">0</span><span class="unit">W</span></div>
         </div>
       </div>
 
       <div class="chart-card" id="priceChartCard" style="margin-bottom:24px; display:none">
-        <h3>⚡ Strompreis heute (aWattar Day-Ahead)</h3>
+        <h3>Strompreis heute (aWattar Day-Ahead)</h3>
         <div class="chart-sub">Aktuelle Stunde hervorgehoben · inkl. Aufschlag, falls in den Einstellungen hinterlegt</div>
         <div class="chart-wrap" style="height:160px">
           <canvas id="priceChart"></canvas>
@@ -450,39 +456,37 @@
 
       <div class="devices-grid" id="devicesGrid">
         <div class="empty-state" id="emptyState">
-          <div class="icon">🔌</div>
           <h3>Noch keine Geräte</h3>
           <p>Füge dein erstes Shelly-Gerät hinzu, um es hier zu überwachen und zu steuern.</p>
-          <button class="btn btn-primary" onclick="openAddModal()">＋ Gerät hinzufügen</button>
+          <button class="btn btn-primary" onclick="openAddModal()">+ Gerät hinzufügen</button>
           <br><br>
-          <button class="btn btn-ghost" onclick="loadDemo()">🎮 Demo-Daten laden</button>
+          <button class="btn btn-ghost" onclick="loadDemo()">Demo-Daten laden</button>
         </div>
       </div>
     </div>
 
-    <!-- ── Analytics View ── -->
+    <!-- analytics view -->
     <div class="view" id="view-analytics">
       <div class="analytics-layout" id="analyticsLayout">
         <div class="empty-state" style="grid-column:1/-1">
-          <div class="icon">📊</div>
           <h3>Keine Daten vorhanden</h3>
           <p>Füge Geräte hinzu und lass sie einige Minuten laufen, um Verbrauchsdiagramme zu sehen.</p>
         </div>
       </div>
     </div>
 
-    <!-- ── Devices List View ── -->
+    <!-- devices list view -->
     <div class="view" id="view-devices">
       <div class="settings-section">
         <h3>Verbundene Geräte</h3>
         <div id="devicesList"></div>
       </div>
-      <button class="btn btn-primary" onclick="openAddModal()">＋ Gerät hinzufügen</button>
+      <button class="btn btn-primary" onclick="openAddModal()">+ Gerät hinzufügen</button>
       &nbsp;
-      <button class="btn btn-ghost" onclick="loadDemo()">🎮 Demo-Daten laden</button>
+      <button class="btn btn-ghost" onclick="loadDemo()">Demo-Daten laden</button>
     </div>
 
-    <!-- ── Settings View ── -->
+    <!-- settings view -->
     <div class="view" id="view-settings">
       <div class="settings-section">
         <h3>Allgemein</h3>
@@ -559,8 +563,8 @@
           <div style="font-size:13px;color:var(--muted)">1.0.0</div>
         </div>
         <div class="settings-row">
-          <div><div class="s-title">Shelly API</div></div>
-          <div style="font-size:13px;color:var(--success)">● Gen1 + Gen2/3</div>
+          <div><div class="s-title">Unterstützte Schnittstellen</div></div>
+          <div style="font-size:13px;color:var(--success)">● Shelly (Gen1/Gen2/3), Tasmota, TP-Link Kasa</div>
         </div>
       </div>
     </div>
@@ -568,11 +572,11 @@
   </div>
 </main>
 
-<!-- ── Add Device Modal ── -->
+<!-- add device modal -->
 <div class="modal-overlay" id="addModal">
   <div class="modal">
     <h2>Gerät hinzufügen</h2>
-    <p>Gib die IP-Adresse deines Shelly-Geräts ein. Es muss im selben Netzwerk erreichbar sein.</p>
+    <p>Gib die IP-Adresse deines Geräts ein. Es muss im selben Netzwerk erreichbar sein.</p>
     <div class="form-field">
       <label>Gerätename</label>
       <input id="newName" type="text" placeholder="z. B. Wohnzimmer Steckdose" />
@@ -582,13 +586,21 @@
       <input id="newIP" type="text" placeholder="192.168.1.xxx" />
     </div>
     <div class="form-field">
+      <label>Schnittstelle</label>
+      <select id="newProtocol">
+        <option value="shelly">Shelly (Gen1 / Gen2 / Gen3)</option>
+        <option value="tasmota">Tasmota</option>
+        <option value="tplink">TP-Link Kasa / Tapo</option>
+      </select>
+    </div>
+    <div class="form-field">
       <label>Gerätetyp</label>
       <select id="newType">
-        <option value="plug">Shelly Plug / Steckdose</option>
-        <option value="relay">Shelly 1 / Relais</option>
-        <option value="dimmer">Shelly Dimmer</option>
-        <option value="em">Shelly EM / Energiemesser</option>
-        <option value="pv">☀️ PV-Anlage / Wechselrichter</option>
+        <option value="plug">Plug / Steckdose</option>
+        <option value="relay">Relais</option>
+        <option value="dimmer">Dimmer</option>
+        <option value="em">Energiemesser</option>
+        <option value="pv">PV-Anlage / Wechselrichter</option>
       </select>
     </div>
     <div class="modal-actions">
@@ -598,7 +610,7 @@
   </div>
 </div>
 
-<!-- ── Chart Modal ── -->
+<!-- chart modal -->
 <div class="modal-overlay" id="chartModal">
   <div class="modal" style="max-width:580px">
     <h2 id="chartModalTitle">Leistungsverlauf</h2>
@@ -612,7 +624,7 @@
   </div>
 </div>
 
-<!-- ── Automation Modal ── -->
+<!-- automation modal -->
 <div class="modal-overlay" id="automationModal">
   <div class="modal">
     <h2>Automatisierung</h2>
@@ -676,24 +688,20 @@
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
-// ─────────────────────────────────────────────
-// State
-// ─────────────────────────────────────────────
-let allDevices   = [];
-let miniCharts   = {};
-let modalChart   = null;
+// app state
+let allDevices = [];
+let miniCharts = {};
+let modalChart = null;
 let refreshTimer = null;
-let INTERVAL     = 10000;
-let currentView  = 'dashboard';
+let INTERVAL = 10000;
+let currentView = 'dashboard';
 
-// ─────────────────────────────────────────────
-// View switching
-// ─────────────────────────────────────────────
+// view switching
 const viewTitles = {
   dashboard: ['Dashboard', 'Übersicht aller verbundenen Shelly-Geräte'],
   analytics: ['Auswertung', 'Detaillierter Verbrauchsverlauf deiner Geräte'],
-  devices:   ['Geräte', 'Verwaltung aller eingebundenen Shelly-Geräte'],
-  settings:  ['Einstellungen', 'Dashboard-Konfiguration'],
+  devices: ['Geräte', 'Verwaltung aller eingebundenen Shelly-Geräte'],
+  settings: ['Einstellungen', 'Dashboard-Konfiguration'],
 };
 
 function showView(id, el) {
@@ -703,16 +711,14 @@ function showView(id, el) {
   if (el) el.classList.add('active');
   currentView = id;
   const [title, sub] = viewTitles[id] || [id, ''];
-  document.getElementById('viewTitle').textContent    = title;
+  document.getElementById('viewTitle').textContent = title;
   document.getElementById('viewSubtitle').textContent = sub;
   if (id === 'analytics') renderAnalytics();
-  if (id === 'devices')   renderDevicesList();
-  if (id === 'settings')  { loadAutomationSettings(); loadAutomationLog(); }
+  if (id === 'devices') renderDevicesList();
+  if (id === 'settings') { loadAutomationSettings(); loadAutomationLog(); }
 }
 
-// ─────────────────────────────────────────────
-// Auth
-// ─────────────────────────────────────────────
+// auth
 async function doLogout() {
   await fetch('/api/logout', { method: 'POST' });
   window.location.href = '/login';
@@ -723,12 +729,10 @@ async function loadUser() {
   const d = await r.json();
   if (!d.logged_in) { window.location.href = '/login'; return; }
   document.getElementById('userNameLabel').textContent = d.username;
-  document.getElementById('avatarLetter').textContent  = d.username[0].toUpperCase();
+  document.getElementById('avatarLetter').textContent = d.username[0].toUpperCase();
 }
 
-// ─────────────────────────────────────────────
-// Devices
-// ─────────────────────────────────────────────
+// device list
 async function loadDevices() {
   const r = await fetch('/api/devices');
   allDevices = await r.json();
@@ -755,9 +759,7 @@ async function refreshDevice(id) {
   } catch(e) {}
 }
 
-// ─────────────────────────────────────────────
-// Render Dashboard
-// ─────────────────────────────────────────────
+// dashboard rendering
 function renderDashboard() {
   const grid = document.getElementById('devicesGrid');
   const empty = document.getElementById('emptyState');
@@ -790,7 +792,7 @@ function createDeviceCard(d) {
   el.innerHTML = `
     <div class="device-card-header">
       <div>
-        <div class="device-name">${isPv ? '☀️ ' : ''}${esc(d.name)}</div>
+        <div class="device-name">${esc(d.name)}${isPv ? ' <span class="badge-pv">PV</span>' : ''}</div>
         <div class="device-ip">${esc(d.ip)}</div>
       </div>
       <div class="status-dot ${d.online ? 'online' : 'offline'}" id="dot-${d.id}" title="${d.online ? 'Online' : 'Offline'}"></div>
@@ -827,9 +829,9 @@ function createDeviceCard(d) {
       </label>
       <span class="toggle-label" id="relay-label-${d.id}">${d.relay_on ? 'Ein' : 'Aus'}</span>
 
-      <button class="btn-chart" onclick="openChart('${d.id}')">📈 Verlauf</button>
+      <button class="btn-chart" onclick="openChart('${d.id}')">Verlauf</button>
       ${isPv ? '' : `<button class="btn-chart" id="auto-btn-${d.id}" onclick="openAutomationModal('${d.id}')">${automationLabel(d)}</button>`}
-      <button class="btn-delete" onclick="deleteDevice('${d.id}')" title="Entfernen">🗑</button>
+      <button class="btn-delete" onclick="deleteDevice('${d.id}')" title="Entfernen">Entfernen</button>
     </div>
   `;
   return el;
@@ -837,7 +839,7 @@ function createDeviceCard(d) {
 
 function automationLabel(d) {
   const a = d.automation || {};
-  return a.enabled ? '🤖 Automatik: An' : '🤖 Automatik';
+  return a.enabled ? 'Automatik: An' : 'Automatik';
 }
 
 function updateDeviceCard(d) {
@@ -870,15 +872,15 @@ function renderSummary() {
   const consumers = allDevices.filter(d => d.type !== 'pv');
   const pvDevices = allDevices.filter(d => d.type === 'pv');
 
-  const total   = allDevices.length;
-  const online  = allDevices.filter(d => d.online).length;
-  const power   = consumers.reduce((s, d) => s + (d.power_w || 0), 0);
-  const energy  = consumers.reduce((s, d) => s + (d.energy_kwh || 0), 0);
+  const total = allDevices.length;
+  const online = allDevices.filter(d => d.online).length;
+  const power = consumers.reduce((s, d) => s + (d.power_w || 0), 0);
+  const energy = consumers.reduce((s, d) => s + (d.energy_kwh || 0), 0);
   const pvTotal = pvDevices.reduce((s, d) => s + (d.online ? (d.power_w || 0) : 0), 0);
 
-  document.getElementById('s-total').textContent  = total;
+  document.getElementById('s-total').textContent = total;
   document.getElementById('s-online').textContent = online;
-  document.getElementById('s-power').textContent  = power.toFixed(1);
+  document.getElementById('s-power').textContent = power.toFixed(1);
   document.getElementById('s-energy').textContent = energy.toFixed(3);
   document.getElementById('deviceCount').textContent = total;
 
@@ -891,9 +893,7 @@ function renderSummary() {
   }
 }
 
-// ─────────────────────────────────────────────
-// Strompreis (aWattar)
-// ─────────────────────────────────────────────
+// aWattar electricity price
 let priceChart = null;
 
 async function loadPrice() {
@@ -906,7 +906,7 @@ async function loadPrice() {
 
 function renderPrice(d) {
   const priceEl = document.getElementById('s-price');
-  const timeEl  = document.getElementById('s-price-time');
+  const timeEl = document.getElementById('s-price-time');
   if (d.effective_ct_per_kwh != null) {
     priceEl.textContent = d.effective_ct_per_kwh.toFixed(2);
     const current = (d.today || []).find(h => h.is_current);
@@ -956,9 +956,7 @@ function renderPriceChart(d) {
 
 function round2(n) { return Math.round(n * 100) / 100; }
 
-// ─────────────────────────────────────────────
-// Sparkline
-// ─────────────────────────────────────────────
+// sparkline charts
 async function updateSparkline(id) {
   const r = await fetch(`/api/devices/${id}/history`);
   const history = await r.json();
@@ -968,7 +966,7 @@ async function updateSparkline(id) {
   if (!canvas) return;
 
   const labels = history.map(h => h.ts.slice(11, 16));
-  const data   = history.map(h => h.watt);
+  const data = history.map(h => h.watt);
 
   if (miniCharts[id]) {
     miniCharts[id].data.labels = labels;
@@ -1004,20 +1002,18 @@ async function updateSparkline(id) {
   });
 }
 
-// ─────────────────────────────────────────────
-// Chart Modal
-// ─────────────────────────────────────────────
+// chart modal
 async function openChart(id) {
   const dev = allDevices.find(d => d.id === id);
   if (!dev) return;
 
   document.getElementById('chartModalTitle').textContent = dev.name + ' – Leistungsverlauf';
-  document.getElementById('chartModalSub').textContent   = `IP: ${dev.ip} · Aktuell: ${dev.power_w} W`;
+  document.getElementById('chartModalSub').textContent = `IP: ${dev.ip} · Aktuell: ${dev.power_w} W`;
 
   const r = await fetch(`/api/devices/${id}/history`);
   const history = await r.json();
-  const labels  = history.map(h => h.ts.slice(11, 16));
-  const data    = history.map(h => h.watt);
+  const labels = history.map(h => h.ts.slice(11, 16));
+  const data = history.map(h => h.watt);
 
   if (modalChart) { modalChart.destroy(); modalChart = null; }
 
@@ -1059,13 +1055,11 @@ async function openChart(id) {
   document.getElementById('chartModal').classList.add('show');
 }
 
-// ─────────────────────────────────────────────
-// Analytics View
-// ─────────────────────────────────────────────
+// analytics view
 async function renderAnalytics() {
   const layout = document.getElementById('analyticsLayout');
   if (allDevices.length === 0) {
-    layout.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="icon">📊</div><h3>Keine Daten vorhanden</h3><p>Füge Geräte hinzu, um Diagramme zu sehen.</p></div>`;
+    layout.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><h3>Keine Daten vorhanden</h3><p>Füge Geräte hinzu, um Diagramme zu sehen.</p></div>`;
     return;
   }
 
@@ -1111,10 +1105,10 @@ async function renderAnalytics() {
     histories[dev.id] = await r.json();
   }
 
-  // Total line
+  // total line across all devices
   const refHist = histories[allDevices[0].id] || [];
-  const labels  = refHist.map(h => h.ts.slice(11, 16));
-  const totals  = labels.map((_, i) =>
+  const labels = refHist.map(h => h.ts.slice(11, 16));
+  const totals = labels.map((_, i) =>
     allDevices.reduce((s, d) => s + ((histories[d.id][i]?.watt) || 0), 0)
   );
 
@@ -1167,9 +1161,7 @@ async function renderAnalytics() {
   });
 }
 
-// ─────────────────────────────────────────────
-// Devices List View
-// ─────────────────────────────────────────────
+// devices list view
 function renderDevicesList() {
   const el = document.getElementById('devicesList');
   if (!allDevices.length) {
@@ -1188,15 +1180,13 @@ function renderDevicesList() {
       <div style="display:flex;gap:8px;align-items:center">
         <span style="font-size:14px;font-weight:600;color:var(--accent)">${d.power_w} W</span>
         <button class="btn btn-ghost" style="font-size:12px;padding:5px 10px" onclick="setRelay('${d.id}', ${!d.relay_on})">${d.relay_on?'Aus':'Ein'}</button>
-        <button class="btn-delete" onclick="deleteDevice('${d.id}')">🗑</button>
+        <button class="btn-delete" onclick="deleteDevice('${d.id}')" title="Entfernen">Entfernen</button>
       </div>
     </div>
   `).join('');
 }
 
-// ─────────────────────────────────────────────
-// Automatisierung (pro Gerät)
-// ─────────────────────────────────────────────
+// per-device automation
 let automationDeviceId = null;
 
 function openAutomationModal(id) {
@@ -1207,13 +1197,13 @@ function openAutomationModal(id) {
 
   document.getElementById('autoModalDeviceName').textContent =
     `Regeln für „${dev.name}“ – wird automatisch ein-/ausgeschaltet, solange die Automatisierung aktiv ist.`;
-  document.getElementById('autoEnabled').checked      = !!a.enabled;
+  document.getElementById('autoEnabled').checked = !!a.enabled;
   document.getElementById('autoPriceEnabled').checked = !!a.price_enabled;
-  document.getElementById('autoPriceMax').value       = a.price_max_ct ?? 15;
-  document.getElementById('autoPvEnabled').checked    = !!a.pv_enabled;
-  document.getElementById('autoPvSurplus').value      = a.pv_min_surplus_w ?? 200;
-  document.getElementById('autoLogic').value          = a.logic || 'OR';
-  document.getElementById('autoPriority').value       = a.priority ?? 10;
+  document.getElementById('autoPriceMax').value = a.price_max_ct ?? 15;
+  document.getElementById('autoPvEnabled').checked = !!a.pv_enabled;
+  document.getElementById('autoPvSurplus').value = a.pv_min_surplus_w ?? 200;
+  document.getElementById('autoLogic').value = a.logic || 'OR';
+  document.getElementById('autoPriority').value = a.priority ?? 10;
 
   document.getElementById('automationModal').classList.add('show');
 }
@@ -1243,15 +1233,13 @@ async function saveAutomation() {
       updateDeviceCard(dev);
     }
     closeModal('automationModal');
-    toast('✅ Automatisierung gespeichert', 'success');
+    toast('Automatisierung gespeichert', 'success');
   } else {
-    toast('❌ Fehler beim Speichern', 'error');
+    toast('Fehler beim Speichern', 'error');
   }
 }
 
-// ─────────────────────────────────────────────
-// Relay
-// ─────────────────────────────────────────────
+// relay control
 async function setRelay(id, on) {
   const r = await fetch(`/api/devices/${id}/relay`, {
     method: 'POST',
@@ -1266,42 +1254,42 @@ async function setRelay(id, on) {
     if (cb) cb.checked = on;
     const lbl = document.getElementById('relay-label-' + id);
     if (lbl) lbl.textContent = on ? 'Ein' : 'Aus';
-    toast(on ? '✅ Eingeschaltet' : '⭕ Ausgeschaltet', 'success');
+    toast(on ? 'Eingeschaltet' : 'Ausgeschaltet', 'success');
   } else {
-    toast('❌ ' + (data.error || 'Fehler'), 'error');
+    toast(data.error || 'Fehler', 'error');
     // Revert toggle
     const cb = document.getElementById('relay-' + id);
     if (cb) cb.checked = !on;
   }
 }
 
-// ─────────────────────────────────────────────
-// Add / Delete Device
-// ─────────────────────────────────────────────
+// add / delete device
 function openAddModal() {
   document.getElementById('newName').value = '';
-  document.getElementById('newIP').value   = '';
+  document.getElementById('newIP').value = '';
+  document.getElementById('newProtocol').value = 'shelly';
   document.getElementById('addModal').classList.add('show');
   setTimeout(() => document.getElementById('newName').focus(), 100);
 }
 
 async function addDevice() {
   const name = document.getElementById('newName').value.trim() || 'Shelly Gerät';
-  const ip   = document.getElementById('newIP').value.trim();
+  const ip = document.getElementById('newIP').value.trim();
   const type = document.getElementById('newType').value;
-  if (!ip) { toast('❌ Bitte IP-Adresse eingeben', 'error'); return; }
+  const protocol = document.getElementById('newProtocol').value;
+  if (!ip) { toast('Bitte IP-Adresse eingeben', 'error'); return; }
 
   const r = await fetch('/api/devices', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({name, ip, type})
+    body: JSON.stringify({name, ip, type, protocol})
   });
   const dev = await r.json();
   allDevices.push(dev);
   closeModal('addModal');
   renderDashboard();
   renderSummary();
-  toast('✅ Gerät hinzugefügt', 'success');
+  toast('Gerät hinzugefügt', 'success');
   // Immediately try to get status
   await refreshDevice(dev.id);
 }
@@ -1316,36 +1304,30 @@ async function deleteDevice(id) {
   renderSummary();
   renderDevicesList();
   if (allDevices.length === 0) document.getElementById('emptyState').style.display = 'block';
-  toast('🗑 Gerät entfernt', 'success');
+  toast('Gerät entfernt', 'success');
 }
 
-// ─────────────────────────────────────────────
-// Demo
-// ─────────────────────────────────────────────
+// demo data
 async function loadDemo() {
   const r = await fetch('/api/demo', {method:'POST'});
   const d = await r.json();
   if (d.added > 0) {
-    toast(`✅ ${d.added} Demo-Geräte geladen`, 'success');
+    toast(`${d.added} Demo-Geräte geladen`, 'success');
     await loadDevices();
   } else {
-    toast('ℹ Demo-Geräte bereits vorhanden', 'success');
+    toast('Demo-Geräte bereits vorhanden', 'success');
   }
 }
 
-// ─────────────────────────────────────────────
-// Settings
-// ─────────────────────────────────────────────
+// settings
 function updateInterval() {
   INTERVAL = parseInt(document.getElementById('refreshInterval').value, 10);
   clearInterval(refreshTimer);
   refreshTimer = setInterval(refreshAll, INTERVAL);
-  toast('⚙️ Intervall aktualisiert', 'success');
+  toast('Intervall aktualisiert', 'success');
 }
 
-// ─────────────────────────────────────────────
-// Automatisierung (global) + Protokoll
-// ─────────────────────────────────────────────
+// global automation + log
 async function loadAutomationSettings() {
   const r = await fetch('/api/automation/settings');
   const d = await r.json();
@@ -1365,14 +1347,14 @@ async function saveAutomationSettings() {
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify(payload)
   });
-  toast('⚙️ Automatisierungseinstellungen gespeichert', 'success');
+  toast('Automatisierungseinstellungen gespeichert', 'success');
   loadPrice(); // Aufschlag beeinflusst den angezeigten effektiven Preis
 }
 
 async function runAutomationNow() {
   const r = await fetch('/api/automation/run', {method: 'POST'});
   await r.json();
-  toast('▶ Automatisierung ausgeführt', 'success');
+  toast('Automatisierung ausgeführt', 'success');
   await loadAutomationLog();
   await refreshAll();
 }
@@ -1387,20 +1369,18 @@ async function loadAutomationLog() {
     return;
   }
   el.innerHTML = log.map(e => {
-    const icon = e.action === 'ein' ? '🟢 eingeschaltet' : e.action === 'aus' ? '🔴 ausgeschaltet' : '⚠️ Fehler';
+    const label = e.action === 'ein' ? 'eingeschaltet' : e.action === 'aus' ? 'ausgeschaltet' : 'Fehler';
     return `
       <div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
         <span style="color:var(--muted)">${esc(e.ts.slice(0,16).replace('T',' '))}</span>
-        — <strong>${esc(e.device)}</strong> ${icon}
+        — <strong>${esc(e.device)}</strong> ${label}
         <div style="color:var(--muted);font-size:12px;margin-top:2px">${esc(e.reason)}</div>
       </div>
     `;
   }).join('');
 }
 
-// ─────────────────────────────────────────────
-// Modal / Toast helpers
-// ─────────────────────────────────────────────
+// modal / toast helpers
 function closeModal(id) {
   document.getElementById(id).classList.remove('show');
 }
@@ -1411,7 +1391,7 @@ document.querySelectorAll('.modal-overlay').forEach(o =>
 
 function toast(msg, type='success') {
   const wrap = document.getElementById('toastWrap');
-  const el   = document.createElement('div');
+  const el = document.createElement('div');
   el.className = 'toast ' + type;
   el.textContent = msg;
   wrap.appendChild(el);
@@ -1424,9 +1404,7 @@ function esc(str) {
   return d.innerHTML;
 }
 
-// ─────────────────────────────────────────────
-// Init
-// ─────────────────────────────────────────────
+// init
 (async () => {
   await loadUser();
   await loadDevices();

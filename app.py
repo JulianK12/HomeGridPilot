@@ -1,30 +1,62 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from werkzeug.security import generate_password_hash, check_password_hash
+from dotenv import load_dotenv
 import requests
-import json
 from datetime import datetime, timedelta
 import random
 import time
 import os
+import secrets
 import threading
 from functools import wraps
 
-app = Flask(__name__)
-app.secret_key = "shelly-dashboard-secret-2024"
+import devices
 
-# ─────────────────────────────────────────────
-# In-memory storage (replace with a DB in prod)
-# ─────────────────────────────────────────────
+load_dotenv()
+
+app = Flask(__name__)
+
+secret_key = os.environ.get("SECRET_KEY")
+if not secret_key:
+    secret_key = secrets.token_hex(32)
+    print("WARNING: SECRET_KEY not set, using a random key for this run. "
+          "Sessions will not survive a restart - set SECRET_KEY in your .env file.")
+app.secret_key = secret_key
+
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=os.environ.get("SESSION_COOKIE_SECURE", "false").lower() == "true",
+    PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
+)
+
+# no real database for now, just keep everything in memory
+admin_username = os.environ.get("ADMIN_USERNAME", "admin")
+admin_password = os.environ.get("ADMIN_PASSWORD")
+if not admin_password:
+    admin_password = "admin123"
+    print("WARNING: ADMIN_PASSWORD not set, using the default password 'admin123'. "
+          "Set ADMIN_USERNAME and ADMIN_PASSWORD in your .env file before exposing this app.")
+
 USERS = {
-    "admin": "admin123"
+    admin_username: generate_password_hash(admin_password)
 }
 
-devices = {}          # id -> device config
-power_history = {}    # id -> list of {ts, watt}
+# used to keep login timing similar for unknown usernames
+DUMMY_HASH = generate_password_hash(secrets.token_hex(16))
 
-# ─── Dynamische Strompreise (aWattar DE) ──────
+# very basic brute-force protection: ip -> {"count": int, "locked_until": timestamp}
+LOGIN_ATTEMPTS = {}
+MAX_LOGIN_ATTEMPTS = 5
+LOGIN_LOCKOUT_SECONDS = 300
+
+DEVICES = {}           # id -> device config
+power_history = {}     # id -> list of {ts, watt}
+
+# cache for the aWattar day-ahead prices
 PRICE_CACHE = {"data": [], "fetched_at": 0}
 
-# ─── Automatisierung ──────────────────────────
+# global switch + settings for the automation loop
 AUTOMATION = {
     "enabled": False,
     "interval_sec": 300,
@@ -34,17 +66,19 @@ automation_log = []   # most recent first, capped at 50
 _automation_thread = None
 
 def default_automation_config():
+    # price_max_ct: turn on below this price
+    # pv_min_surplus_w: turn on once this much pv surplus is available
+    # priority: lower number gets pv surplus first
     return {
         "enabled": False,
-        "logic": "OR",            # "AND" oder "OR" - Verknüpfung der aktiven Bedingungen
+        "logic": "OR",
         "price_enabled": False,
-        "price_max_ct": 15.0,      # Einschalten, wenn Strompreis <= X ct/kWh
+        "price_max_ct": 15.0,
         "pv_enabled": False,
-        "pv_min_surplus_w": 200,   # Einschalten, wenn PV-Überschuss >= X W
-        "priority": 10,            # niedriger = wird bei PV-Überschuss zuerst bedient
+        "pv_min_surplus_w": 200,
+        "priority": 10,
     }
 
-# ─── Auth helper ──────────────────────────────
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -53,9 +87,6 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated
 
-# ─────────────────────────────────────────────
-# Pages
-# ─────────────────────────────────────────────
 @app.route("/")
 def index():
     if not session.get("logged_in"):
@@ -68,18 +99,31 @@ def login_page():
         return redirect(url_for("index"))
     return render_template("login.html")
 
-# ─────────────────────────────────────────────
-# Auth API
-# ─────────────────────────────────────────────
 @app.route("/api/login", methods=["POST"])
 def login():
-    data = request.get_json()
+    ip = request.remote_addr
+    attempt = LOGIN_ATTEMPTS.get(ip)
+    if attempt and attempt["locked_until"] > time.time():
+        return jsonify({"ok": False, "error": "Zu viele Fehlversuche, bitte später erneut versuchen"}), 429
+
+    data = request.get_json() or {}
     username = data.get("username", "")
     password = data.get("password", "")
-    if USERS.get(username) == password:
+
+    stored_hash = USERS.get(username, DUMMY_HASH)
+    if username in USERS and check_password_hash(stored_hash, password):
+        LOGIN_ATTEMPTS.pop(ip, None)
+        session.clear()
+        session.permanent = True
         session["logged_in"] = True
         session["username"] = username
         return jsonify({"ok": True, "username": username})
+
+    attempt = LOGIN_ATTEMPTS.setdefault(ip, {"count": 0, "locked_until": 0})
+    attempt["count"] += 1
+    if attempt["count"] >= MAX_LOGIN_ATTEMPTS:
+        attempt["locked_until"] = time.time() + LOGIN_LOCKOUT_SECONDS
+        attempt["count"] = 0
     return jsonify({"ok": False, "error": "Ungültiger Benutzername oder Passwort"}), 401
 
 @app.route("/api/logout", methods=["POST"])
@@ -93,13 +137,10 @@ def me():
         return jsonify({"logged_in": True, "username": session.get("username")})
     return jsonify({"logged_in": False})
 
-# ─────────────────────────────────────────────
-# Device Management
-# ─────────────────────────────────────────────
 @app.route("/api/devices", methods=["GET"])
 @login_required
 def get_devices():
-    return jsonify(list(devices.values()))
+    return jsonify(list(DEVICES.values()))
 
 @app.route("/api/devices", methods=["POST"])
 @login_required
@@ -109,6 +150,9 @@ def add_device():
     ip = data.get("ip", "").strip()
     name = data.get("name", "Shelly Gerät").strip()
     device_type = data.get("type", "plug")
+    protocol = data.get("protocol", "shelly")
+    if protocol not in devices.PROTOCOLS:
+        protocol = "shelly"
 
     if not ip:
         return jsonify({"error": "IP-Adresse erforderlich"}), 400
@@ -118,6 +162,7 @@ def add_device():
         "name": name,
         "ip": ip,
         "type": device_type,
+        "protocol": protocol,
         "online": False,
         "relay_on": False,
         "power_w": 0.0,
@@ -127,87 +172,27 @@ def add_device():
         "added": datetime.now().isoformat(),
         "automation": default_automation_config(),
     }
-    devices[device_id] = device
+    DEVICES[device_id] = device
     power_history[device_id] = []
     return jsonify(device), 201
 
 @app.route("/api/devices/<device_id>", methods=["DELETE"])
 @login_required
 def delete_device(device_id):
-    if device_id in devices:
-        del devices[device_id]
+    if device_id in DEVICES:
+        del DEVICES[device_id]
         power_history.pop(device_id, None)
         return jsonify({"ok": True})
     return jsonify({"error": "Nicht gefunden"}), 404
 
-# ─────────────────────────────────────────────
-# Live Device Status  (real Shelly HTTP API)
-# ─────────────────────────────────────────────
-def fetch_shelly_status(device):
-    ip = device["ip"]
-    try:
-        # Gen1 style
-        r = requests.get(f"http://{ip}/status", timeout=3)
-        if r.status_code == 200:
-            s = r.json()
-            meters = s.get("meters", [{}])
-            emeters = s.get("emeters", [{}])
-            relays = s.get("relays", [{}])
-            m = meters[0] if meters else {}
-            em = emeters[0] if emeters else {}
-
-            power = m.get("power", em.get("power", 0.0))
-            voltage = em.get("voltage", s.get("voltage", 0.0))
-            current = em.get("current", 0.0)
-            total_energy = m.get("total", em.get("total", 0.0)) / 1000.0  # Wh→kWh
-            relay_on = relays[0].get("ison", False) if relays else False
-
-            return {
-                "online": True,
-                "relay_on": relay_on,
-                "power_w": round(power, 2),
-                "voltage_v": round(voltage, 1),
-                "current_a": round(current, 3),
-                "energy_kwh": round(total_energy, 4),
-            }
-    except Exception:
-        pass
-
-    # Try Gen2/Gen3 RPC
-    try:
-        r = requests.post(
-            f"http://{ip}/rpc/Switch.GetStatus",
-            json={"id": 0}, timeout=3
-        )
-        if r.status_code == 200:
-            s = r.json()
-            apower = s.get("apower", 0.0)
-            voltage = s.get("voltage", 0.0)
-            current = s.get("current", 0.0)
-            energy = s.get("aenergy", {}).get("total", 0.0) / 1000.0
-            relay_on = s.get("output", False)
-            return {
-                "online": True,
-                "relay_on": relay_on,
-                "power_w": round(apower, 2),
-                "voltage_v": round(voltage, 1),
-                "current_a": round(current, 3),
-                "energy_kwh": round(energy, 4),
-            }
-    except Exception:
-        pass
-
-    return {"online": False, "relay_on": False, "power_w": 0, "voltage_v": 0, "current_a": 0, "energy_kwh": 0}
-
-
 @app.route("/api/devices/<device_id>/status")
 @login_required
 def device_status(device_id):
-    if device_id not in devices:
+    if device_id not in DEVICES:
         return jsonify({"error": "Nicht gefunden"}), 404
 
-    device = devices[device_id]
-    status = fetch_shelly_status(device)
+    device = DEVICES[device_id]
+    status = devices.fetch_status(device)
     device.update(status)
 
     # Store power history (keep last 60 entries)
@@ -218,70 +203,30 @@ def device_status(device_id):
 
     return jsonify(device)
 
-# ─────────────────────────────────────────────
-# Relay Control
-# ─────────────────────────────────────────────
-def control_relay_gen1(ip, turn_on):
-    action = "on" if turn_on else "off"
-    r = requests.get(f"http://{ip}/relay/0?turn={action}", timeout=3)
-    return r.status_code == 200
-
-def control_relay_gen2(ip, turn_on):
-    r = requests.post(
-        f"http://{ip}/rpc/Switch.Set",
-        json={"id": 0, "on": turn_on}, timeout=3
-    )
-    return r.status_code == 200
-
-def apply_relay(device, turn_on):
-    """Schaltet das Relais eines Geräts (Gen1 oder Gen2/3) und aktualisiert dessen Status."""
-    ip = device["ip"]
-    success = False
-    try:
-        success = control_relay_gen1(ip, turn_on)
-    except Exception:
-        pass
-
-    if not success:
-        try:
-            success = control_relay_gen2(ip, turn_on)
-        except Exception:
-            pass
-
-    if success:
-        device["relay_on"] = turn_on
-    return success
-
 @app.route("/api/devices/<device_id>/relay", methods=["POST"])
 @login_required
 def set_relay(device_id):
-    if device_id not in devices:
+    if device_id not in DEVICES:
         return jsonify({"error": "Nicht gefunden"}), 404
 
     data = request.get_json()
     turn_on = bool(data.get("on", False))
-    device = devices[device_id]
+    device = DEVICES[device_id]
 
-    if apply_relay(device, turn_on):
+    if devices.set_relay(device, turn_on):
         return jsonify({"ok": True, "relay_on": turn_on})
     return jsonify({"ok": False, "error": "Gerät nicht erreichbar"}), 503
 
-# ─────────────────────────────────────────────
-# Power History
-# ─────────────────────────────────────────────
 @app.route("/api/devices/<device_id>/history")
 @login_required
 def device_history(device_id):
     history = power_history.get(device_id, [])
     return jsonify(history)
 
-# ─────────────────────────────────────────────
-# Dynamische Strompreise (aWattar Day-Ahead, DE)
-# ─────────────────────────────────────────────
+# aWattar day-ahead prices (DE), free public API, no key needed
 AWATTAR_URL = "https://api.awattar.de/v1/marketdata"
 
 def fetch_awattar_prices():
-    """Lädt die aktuellen Day-Ahead-Preise von aWattar und füllt den Cache."""
     try:
         r = requests.get(AWATTAR_URL, timeout=5)
         if r.status_code == 200:
@@ -300,7 +245,6 @@ def fetch_awattar_prices():
         pass
 
 def get_price_data():
-    """Liefert den aktuellen Strompreis sowie den Tagesverlauf (ct/kWh)."""
     if not PRICE_CACHE["data"] or time.time() - PRICE_CACHE.get("fetched_at", 0) > 1800:
         fetch_awattar_prices()
 
@@ -338,9 +282,7 @@ def get_price_data():
 def price():
     return jsonify(get_price_data())
 
-# ─────────────────────────────────────────────
-# Demo mode: populate fake data for testing
-# ─────────────────────────────────────────────
+# fills the dashboard with a few fake devices so the UI can be tried without hardware
 @app.route("/api/demo", methods=["POST"])
 @login_required
 def add_demo():
@@ -354,12 +296,13 @@ def add_demo():
     added = []
     for i, d in enumerate(demo_devices):
         device_id = f"demo_{i}"
-        if device_id not in devices:
+        if device_id not in DEVICES:
             device = {
                 "id": device_id,
                 "name": d["name"],
                 "ip": d["ip"],
                 "type": d["type"],
+                "protocol": "shelly",
                 "online": True,
                 "relay_on": i % 2 == 0,
                 "power_w": demo_powers[i],
@@ -370,7 +313,7 @@ def add_demo():
                 "_demo": True,
                 "automation": default_automation_config(),
             }
-            devices[device_id] = device
+            DEVICES[device_id] = device
             # Generate fake history
             hist = []
             base = demo_powers[i]
@@ -381,25 +324,22 @@ def add_demo():
             added.append(device)
     return jsonify({"added": len(added)})
 
-# ─────────────────────────────────────────────
-# Automatisierung: Konfiguration
-# ─────────────────────────────────────────────
 @app.route("/api/devices/<device_id>/automation", methods=["POST"])
 @login_required
 def set_device_automation(device_id):
-    if device_id not in devices:
+    if device_id not in DEVICES:
         return jsonify({"error": "Nicht gefunden"}), 404
 
     data = request.get_json() or {}
-    auto = devices[device_id].setdefault("automation", default_automation_config())
+    auto = DEVICES[device_id].setdefault("automation", default_automation_config())
 
-    auto["enabled"]          = bool(data.get("enabled", auto["enabled"]))
-    auto["logic"]            = "AND" if data.get("logic", auto["logic"]) == "AND" else "OR"
-    auto["price_enabled"]    = bool(data.get("price_enabled", auto["price_enabled"]))
-    auto["price_max_ct"]     = float(data.get("price_max_ct", auto["price_max_ct"]))
-    auto["pv_enabled"]       = bool(data.get("pv_enabled", auto["pv_enabled"]))
+    auto["enabled"] = bool(data.get("enabled", auto["enabled"]))
+    auto["logic"] = "AND" if data.get("logic", auto["logic"]) == "AND" else "OR"
+    auto["price_enabled"] = bool(data.get("price_enabled", auto["price_enabled"]))
+    auto["price_max_ct"] = float(data.get("price_max_ct", auto["price_max_ct"]))
+    auto["pv_enabled"] = bool(data.get("pv_enabled", auto["pv_enabled"]))
     auto["pv_min_surplus_w"] = float(data.get("pv_min_surplus_w", auto["pv_min_surplus_w"]))
-    auto["priority"]         = int(data.get("priority", auto["priority"]))
+    auto["priority"] = int(data.get("priority", auto["priority"]))
 
     return jsonify({"ok": True, "automation": auto})
 
@@ -431,9 +371,6 @@ def run_automation_now():
     run_automation_cycle()
     return jsonify({"ok": True, "log": automation_log[:50]})
 
-# ─────────────────────────────────────────────
-# Automatisierung: Engine
-# ─────────────────────────────────────────────
 def log_automation(device_name, action, reason):
     automation_log.insert(0, {
         "ts": datetime.now().isoformat(),
@@ -444,22 +381,21 @@ def log_automation(device_name, action, reason):
     del automation_log[50:]
 
 def run_automation_cycle():
-    """Liest Strompreis & PV-Erzeugung, schaltet Geräte gemäß ihrer Regeln."""
     price_data = get_price_data()
     current_price = price_data["effective_ct_per_kwh"]
 
     # PV-Erzeugung aller PV-Geräte aktualisieren und summieren
     pv_total = 0.0
-    for dev in devices.values():
+    for dev in DEVICES.values():
         if dev.get("type") == "pv":
-            status = fetch_shelly_status(dev)
+            status = devices.fetch_status(dev)
             dev.update(status)
             if dev.get("online"):
                 pv_total += dev.get("power_w", 0.0)
 
     # Automatisierte Verbraucher nach Priorität (niedrig = zuerst) sortieren
     candidates = [
-        d for d in devices.values()
+        d for d in DEVICES.values()
         if d.get("type") != "pv" and d.get("automation", {}).get("enabled")
     ]
     candidates.sort(key=lambda d: d.get("automation", {}).get("priority", 10))
@@ -492,7 +428,7 @@ def run_automation_cycle():
             remaining_pv -= auto.get("pv_min_surplus_w", 0)
 
         if dev.get("relay_on") != target:
-            if apply_relay(dev, target):
+            if devices.set_relay(dev, target):
                 parts = []
                 if price_ok is not None:
                     parts.append(
@@ -527,10 +463,9 @@ def start_automation_thread():
     _automation_thread.start()
 
 if __name__ == "__main__":
-    # Im Debug-Modus mit Reloader läuft der Thread nur im tatsächlich
-    # bedienenden Worker-Prozess (WERKZEUG_RUN_MAIN == "true"), damit
-    # er den gleichen Speicherzustand (devices, etc.) sieht.
+    # only start the background loop in the reloader's worker process,
+    # otherwise it would run twice with separate memory
     if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
         start_automation_thread()
-    print("🔌 Shelly Dashboard läuft auf http://localhost:5000")
+    print("Running on http://127.0.0.1:5000")
     app.run(debug=True, port=5000)
