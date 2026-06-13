@@ -148,7 +148,7 @@ def add_device():
     data = request.get_json()
     device_id = f"dev_{int(time.time()*1000)}"
     ip = data.get("ip", "").strip()
-    name = data.get("name", "Shelly Gerät").strip()
+    name = data.get("name", "Smart-Gerät").strip()
     device_type = data.get("type", "plug")
     protocol = data.get("protocol", "shelly")
     if protocol not in devices.PROTOCOLS:

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Shelly Dashboard</title>
+  <title>HomeGridPilot</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -360,8 +360,8 @@
 <!-- sidebar -->
 <aside class="sidebar">
   <div class="sidebar-logo">
-    <div class="icon">S</div>
-    <div class="brand">Shelly<span>Smart Dashboard</span></div>
+    <div class="icon">H</div>
+    <div class="brand">HomeGridPilot<span>Smart Dashboard</span></div>
   </div>
 
   <nav class="nav">
@@ -402,7 +402,7 @@
   <div class="topbar">
     <div>
       <h1 id="viewTitle">Dashboard</h1>
-      <div class="subtitle" id="viewSubtitle">Übersicht aller verbundenen Shelly-Geräte</div>
+      <div class="subtitle" id="viewSubtitle">Übersicht aller verbundenen Geräte</div>
     </div>
     <div class="topbar-actions">
       <button class="btn btn-ghost" onclick="refreshAll()">Aktualisieren</button>
@@ -457,7 +457,7 @@
       <div class="devices-grid" id="devicesGrid">
         <div class="empty-state" id="emptyState">
           <h3>Noch keine Geräte</h3>
-          <p>Füge dein erstes Shelly-Gerät hinzu, um es hier zu überwachen und zu steuern.</p>
+          <p>Füge dein erstes Gerät hinzu, um es hier zu überwachen und zu steuern.</p>
           <button class="btn btn-primary" onclick="openAddModal()">+ Gerät hinzufügen</button>
           <br><br>
           <button class="btn btn-ghost" onclick="loadDemo()">Demo-Daten laden</button>
@@ -698,9 +698,9 @@ let currentView = 'dashboard';
 
 // view switching
 const viewTitles = {
-  dashboard: ['Dashboard', 'Übersicht aller verbundenen Shelly-Geräte'],
+  dashboard: ['Dashboard', 'Übersicht aller verbundenen Geräte'],
   analytics: ['Auswertung', 'Detaillierter Verbrauchsverlauf deiner Geräte'],
-  devices: ['Geräte', 'Verwaltung aller eingebundenen Shelly-Geräte'],
+  devices: ['Geräte', 'Verwaltung aller eingebundenen Geräte'],
   settings: ['Einstellungen', 'Dashboard-Konfiguration'],
 };
 
@@ -1273,7 +1273,7 @@ function openAddModal() {
 }
 
 async function addDevice() {
-  const name = document.getElementById('newName').value.trim() || 'Shelly Gerät';
+  const name = document.getElementById('newName').value.trim() || 'Smart-Gerät';
   const ip = document.getElementById('newIP').value.trim();
   const type = document.getElementById('newType').value;
   const protocol = document.getElementById('newProtocol').value;

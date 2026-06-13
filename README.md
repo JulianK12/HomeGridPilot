@@ -1,6 +1,6 @@
-# Shelly Dashboard
+# HomeGridPilot
 
-A small Flask web app for monitoring and controlling Shelly smart plugs/relays,
+A small Flask web app for monitoring and controlling smart plugs/relays,
 with optional automation based on dynamic electricity prices (aWattar Germany)
 and PV (solar) surplus.
 
