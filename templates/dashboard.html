@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shelly Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d1117;
+      --surface:  #161b22;
+      --surface2: #1c2128;
+      --border:   #30363d;
+      --accent:   #f97316;
+      --accent2:  #fb923c;
+      --text:     #e6edf3;
+      --muted:    #8b949e;
+      --success:  #3fb950;
+      --danger:   #f85149;
+      --warn:     #d29922;
+      --sidebar:  220px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar);
+      min-width: var(--sidebar);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+    }
+
+    .sidebar-logo {
+      padding: 20px 18px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sidebar-logo .icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .sidebar-logo .brand { font-size: 15px; font-weight: 700; line-height: 1.2; }
+    .sidebar-logo .brand span { display: block; font-size: 11px; font-weight: 400; color: var(--muted); }
+
+    .nav { flex: 1; padding: 12px 10px; }
+    .nav-section { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; padding: 8px 10px 4px; }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; border-radius: 8px; cursor: pointer;
+      font-size: 13.5px; font-weight: 500; color: var(--muted);
+      margin-bottom: 2px; user-select: none;
+      transition: background .12s, color .12s;
+    }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: rgba(249,115,22,.15); color: var(--accent); }
+    .nav-item .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-badge {
+      margin-left: auto;
+      background: var(--accent);
+      color: #fff;
+      font-size: 10px; font-weight: 700;
+      border-radius: 20px; padding: 1px 7px;
+    }
+
+    .sidebar-footer {
+      padding: 12px 10px;
+      border-top: 1px solid var(--border);
+    }
+    .user-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px; border-radius: 8px;
+      cursor: pointer; transition: background .12s;
+    }
+    .user-row:hover { background: var(--surface2); }
+    .avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; flex-shrink: 0;
+    }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-role { font-size: 11px; color: var(--muted); }
+    .logout-btn { font-size: 16px; color: var(--muted); cursor: pointer; }
+
+    /* ── Main ── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .topbar {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .topbar h1 { font-size: 18px; font-weight: 700; }
+    .topbar .subtitle { font-size: 13px; color: var(--muted); margin-top: 1px; }
+
+    .topbar-actions { display: flex; gap: 10px; align-items: center; }
+
+    .btn {
+      padding: 8px 16px; border-radius: 8px; border: none;
+      font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: opacity .15s, transform .1s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-ghost {
+      background: var(--surface2); color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { background: var(--border); }
+
+    .content {
+      flex: 1; overflow-y: auto; padding: 24px;
+    }
+
+    /* ── Views ── */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ── Summary Cards ── */
+    .summary-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 14px; margin-bottom: 24px;
+    }
+    .summary-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 18px;
+    }
+    .summary-card .label { font-size: 12px; color: var(--muted); font-weight: 500; margin-bottom: 8px; }
+    .summary-card .value { font-size: 26px; font-weight: 700; line-height: 1; }
+    .summary-card .unit  { font-size: 13px; color: var(--muted); margin-left: 3px; }
+    .summary-card .trend { font-size: 11px; color: var(--success); margin-top: 6px; }
+
+    /* ── Device Grid ── */
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .section-title { font-size: 15px; font-weight: 600; }
+
+    .devices-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .device-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px;
+      transition: border-color .15s;
+      position: relative;
+    }
+    .device-card:hover { border-color: var(--accent); }
+    .device-card.offline { opacity: .6; }
+
+    .device-card-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .device-name { font-size: 15px; font-weight: 600; }
+    .device-ip   { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .status-dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--muted); margin-top: 4px; flex-shrink: 0;
+    }
+    .status-dot.online  { background: var(--success); box-shadow: 0 0 6px var(--success); }
+    .status-dot.offline { background: var(--danger); }
+
+    .power-big {
+      font-size: 32px; font-weight: 700;
+      color: var(--accent); line-height: 1;
+    }
+    .power-big span { font-size: 14px; color: var(--muted); font-weight: 400; }
+
+    .metrics-row {
+      display: flex; gap: 16px; margin: 14px 0;
+      padding: 12px 0; border-top: 1px solid var(--border);
+    }
+    .metric { flex: 1; }
+    .metric .m-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+    .metric .m-value { font-size: 14px; font-weight: 600; margin-top: 3px; }
+
+    .device-actions {
+      display: flex; gap: 8px; align-items: center;
+      padding-top: 14px; border-top: 1px solid var(--border);
+    }
+
+    /* Toggle Switch */
+    .toggle-wrap { display: flex; align-items: center; gap: 10px; }
+    .toggle-label { font-size: 13px; font-weight: 500; }
+
+    .toggle {
+      position: relative; width: 48px; height: 26px;
+      cursor: pointer; flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle .slider {
+      position: absolute; inset: 0; background: var(--border);
+      border-radius: 26px; transition: .2s;
+    }
+    .toggle .slider::before {
+      content: '';
+      position: absolute; height: 20px; width: 20px;
+      left: 3px; bottom: 3px;
+      background: #fff; border-radius: 50%;
+      transition: .2s;
+    }
+    .toggle input:checked + .slider { background: var(--accent); }
+    .toggle input:checked + .slider::before { transform: translateX(22px); }
+
+    .btn-delete {
+      margin-left: auto;
+      background: none; border: none; color: var(--muted);
+      cursor: pointer; font-size: 16px; padding: 4px;
+      border-radius: 6px; transition: color .12s, background .12s;
+    }
+    .btn-delete:hover { color: var(--danger); background: rgba(248,81,73,.1); }
+
+    .btn-chart {
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); border-radius: 8px; padding: 6px 12px;
+      font-size: 12px; font-weight: 500; cursor: pointer;
+      transition: background .12s;
+    }
+    .btn-chart:hover { background: var(--border); }
+
+    /* Mini sparkline */
+    .sparkline-wrap { height: 40px; margin: 10px 0 0; }
+
+    /* ── Empty State ── */
+    .empty-state {
+      text-align: center; padding: 60px 20px; color: var(--muted);
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-state h3 { font-size: 18px; color: var(--text); margin-bottom: 8px; }
+    .empty-state p  { font-size: 14px; max-width: 300px; margin: 0 auto 20px; }
+
+    /* ── Analytics View ── */
+    .analytics-layout {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+    }
+    .chart-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 20px;
+    }
+    .chart-card.full { grid-column: 1 / -1; }
+    .chart-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .chart-card .chart-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+    .chart-wrap { position: relative; height: 200px; }
+
+    /* ── Settings View ── */
+    .settings-section {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; margin-bottom: 18px; overflow: hidden;
+    }
+    .settings-section h3 {
+      font-size: 13px; font-weight: 600; color: var(--muted);
+      padding: 14px 18px; border-bottom: 1px solid var(--border);
+      text-transform: uppercase; letter-spacing: .06em;
+    }
+    .settings-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; border-bottom: 1px solid var(--border);
+    }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-row .s-title { font-size: 14px; font-weight: 500; }
+    .settings-row .s-desc  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.6);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100; padding: 20px;
+      opacity: 0; pointer-events: none; transition: opacity .15s;
+    }
+    .modal-overlay.show { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 28px;
+      width: 100%; max-width: 440px;
+      transform: translateY(12px); transition: transform .15s;
+    }
+    .modal-overlay.show .modal { transform: translateY(0); }
+    .modal h2 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .modal p  { font-size: 13px; color: var(--muted); margin-bottom: 22px; }
+
+    .form-field { margin-bottom: 16px; }
+    .form-field label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .05em; }
+    .form-field input, .form-field select {
+      width: 100%; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 12px; color: var(--text);
+      font-family: 'Inter', sans-serif; font-size: 14px; outline: none;
+      transition: border-color .15s;
+    }
+    .form-field input:focus, .form-field select:focus { border-color: var(--accent); }
+    .form-field select option { background: var(--surface); }
+
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+
+    /* ── Chart Modal ── */
+    .chart-modal-wrap { position: relative; height: 260px; margin-top: 10px; }
+
+    /* Toast */
+    .toast-wrap {
+      position: fixed; bottom: 24px; right: 24px;
+      display: flex; flex-direction: column; gap: 8px; z-index: 200;
+    }
+    .toast {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 16px;
+      font-size: 13px; display: flex; align-items: center; gap: 8px;
+      animation: slideUp .2s ease;
+      max-width: 280px;
+    }
+    .toast.success { border-color: var(--success); }
+    .toast.error   { border-color: var(--danger); }
+    @keyframes slideUp { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="icon">⚡</div>
+    <div class="brand">Shelly<span>Smart Dashboard</span></div>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-section">Übersicht</div>
+    <div class="nav-item active" onclick="showView('dashboard', this)">
+      <span class="nav-icon">🏠</span> Dashboard
+      <span class="nav-badge" id="deviceCount">0</span>
+    </div>
+    <div class="nav-item" onclick="showView('analytics', this)">
+      <span class="nav-icon">📊</span> Auswertung
+    </div>
+
+    <div class="nav-section" style="margin-top:10px">Verwaltung</div>
+    <div class="nav-item" onclick="showView('devices', this)">
+      <span class="nav-icon">🔌</span> Geräte
+    </div>
+    <div class="nav-item" onclick="showView('settings', this)">
+      <span class="nav-icon">⚙️</span> Einstellungen
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-row" onclick="doLogout()">
+      <div class="avatar" id="avatarLetter">A</div>
+      <div class="user-info">
+        <div class="user-name" id="userNameLabel">Admin</div>
+        <div class="user-role">Administrator</div>
+      </div>
+      <div class="logout-btn" title="Abmelden">↩</div>
+    </div>
+  </div>
+</aside>
+
+<!-- ── Main ── -->
+<main class="main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div>
+      <h1 id="viewTitle">Dashboard</h1>
+      <div class="subtitle" id="viewSubtitle">Übersicht aller verbundenen Shelly-Geräte</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" onclick="refreshAll()">🔄 Aktualisieren</button>
+      <button class="btn btn-primary" onclick="openAddModal()">＋ Gerät hinzufügen</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ── Dashboard View ── -->
+    <div class="view active" id="view-dashboard">
+      <div class="summary-grid" id="summaryGrid">
+        <div class="summary-card">
+          <div class="label">Geräte gesamt</div>
+          <div class="value"><span id="s-total">0</span><span class="unit">Stk.</span></div>
+        </div>
+        <div class="summary-card">
+          <div class="label">Online</div>
+          <div class="value"><span id="s-online">0</span><span class="unit">Stk.</span></div>
+        </div>
+        <div class="summary-card">
+          <div class="label">Aktuelle Leistung</div>
+          <div class="value"><span id="s-power">0</span><span class="unit">W</span></div>
+        </div>
+        <div class="summary-card">
+          <div class="label">Energie heute</div>
+          <div class="value"><span id="s-energy">0</span><span class="unit">kWh</span></div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <div class="section-title">Meine Geräte</div>
+      </div>
+
+      <div class="devices-grid" id="devicesGrid">
+        <div class="empty-state" id="emptyState">
+          <div class="icon">🔌</div>
+          <h3>Noch keine Geräte</h3>
+          <p>Füge dein erstes Shelly-Gerät hinzu, um es hier zu überwachen und zu steuern.</p>
+          <button class="btn btn-primary" onclick="openAddModal()">＋ Gerät hinzufügen</button>
+          <br><br>
+          <button class="btn btn-ghost" onclick="loadDemo()">🎮 Demo-Daten laden</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Analytics View ── -->
+    <div class="view" id="view-analytics">
+      <div class="analytics-layout" id="analyticsLayout">
+        <div class="empty-state" style="grid-column:1/-1">
+          <div class="icon">📊</div>
+          <h3>Keine Daten vorhanden</h3>
+          <p>Füge Geräte hinzu und lass sie einige Minuten laufen, um Verbrauchsdiagramme zu sehen.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Devices List View ── -->
+    <div class="view" id="view-devices">
+      <div class="settings-section">
+        <h3>Verbundene Geräte</h3>
+        <div id="devicesList"></div>
+      </div>
+      <button class="btn btn-primary" onclick="openAddModal()">＋ Gerät hinzufügen</button>
+      &nbsp;
+      <button class="btn btn-ghost" onclick="loadDemo()">🎮 Demo-Daten laden</button>
+    </div>
+
+    <!-- ── Settings View ── -->
+    <div class="view" id="view-settings">
+      <div class="settings-section">
+        <h3>Allgemein</h3>
+        <div class="settings-row">
+          <div>
+            <div class="s-title">Aktualisierungsintervall</div>
+            <div class="s-desc">Wie oft Gerätedaten abgerufen werden</div>
+          </div>
+          <select id="refreshInterval" style="width:120px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:8px;font-family:Inter,sans-serif;font-size:13px;" onchange="updateInterval()">
+            <option value="5000">5 Sek.</option>
+            <option value="10000" selected>10 Sek.</option>
+            <option value="30000">30 Sek.</option>
+            <option value="60000">60 Sek.</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="s-title">Passwort ändern</div>
+            <div class="s-desc">Zugangspasswort für dieses Dashboard</div>
+          </div>
+          <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;">Ändern</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Info</h3>
+        <div class="settings-row">
+          <div><div class="s-title">Version</div></div>
+          <div style="font-size:13px;color:var(--muted)">1.0.0</div>
+        </div>
+        <div class="settings-row">
+          <div><div class="s-title">Shelly API</div></div>
+          <div style="font-size:13px;color:var(--success)">● Gen1 + Gen2/3</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ── Add Device Modal ── -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <h2>Gerät hinzufügen</h2>
+    <p>Gib die IP-Adresse deines Shelly-Geräts ein. Es muss im selben Netzwerk erreichbar sein.</p>
+    <div class="form-field">
+      <label>Gerätename</label>
+      <input id="newName" type="text" placeholder="z. B. Wohnzimmer Steckdose" />
+    </div>
+    <div class="form-field">
+      <label>IP-Adresse</label>
+      <input id="newIP" type="text" placeholder="192.168.1.xxx" />
+    </div>
+    <div class="form-field">
+      <label>Gerätetyp</label>
+      <select id="newType">
+        <option value="plug">Shelly Plug / Steckdose</option>
+        <option value="relay">Shelly 1 / Relais</option>
+        <option value="dimmer">Shelly Dimmer</option>
+        <option value="em">Shelly EM / Energiemesser</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('addModal')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="addDevice()">Hinzufügen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Chart Modal ── -->
+<div class="modal-overlay" id="chartModal">
+  <div class="modal" style="max-width:580px">
+    <h2 id="chartModalTitle">Leistungsverlauf</h2>
+    <p id="chartModalSub" style="margin-bottom:0"></p>
+    <div class="chart-modal-wrap">
+      <canvas id="chartModalCanvas"></canvas>
+    </div>
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="btn btn-ghost" onclick="closeModal('chartModal')">Schließen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+// ─────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────
+let allDevices   = [];
+let miniCharts   = {};
+let modalChart   = null;
+let refreshTimer = null;
+let INTERVAL     = 10000;
+let currentView  = 'dashboard';
+
+// ─────────────────────────────────────────────
+// View switching
+// ─────────────────────────────────────────────
+const viewTitles = {
+  dashboard: ['Dashboard', 'Übersicht aller verbundenen Shelly-Geräte'],
+  analytics: ['Auswertung', 'Detaillierter Verbrauchsverlauf deiner Geräte'],
+  devices:   ['Geräte', 'Verwaltung aller eingebundenen Shelly-Geräte'],
+  settings:  ['Einstellungen', 'Dashboard-Konfiguration'],
+};
+
+function showView(id, el) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('view-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+  currentView = id;
+  const [title, sub] = viewTitles[id] || [id, ''];
+  document.getElementById('viewTitle').textContent    = title;
+  document.getElementById('viewSubtitle').textContent = sub;
+  if (id === 'analytics') renderAnalytics();
+  if (id === 'devices')   renderDevicesList();
+}
+
+// ─────────────────────────────────────────────
+// Auth
+// ─────────────────────────────────────────────
+async function doLogout() {
+  await fetch('/api/logout', { method: 'POST' });
+  window.location.href = '/login';
+}
+
+async function loadUser() {
+  const r = await fetch('/api/me');
+  const d = await r.json();
+  if (!d.logged_in) { window.location.href = '/login'; return; }
+  document.getElementById('userNameLabel').textContent = d.username;
+  document.getElementById('avatarLetter').textContent  = d.username[0].toUpperCase();
+}
+
+// ─────────────────────────────────────────────
+// Devices
+// ─────────────────────────────────────────────
+async function loadDevices() {
+  const r = await fetch('/api/devices');
+  allDevices = await r.json();
+  document.getElementById('deviceCount').textContent = allDevices.length;
+  renderDashboard();
+}
+
+async function refreshAll() {
+  for (const d of allDevices) {
+    await refreshDevice(d.id);
+  }
+  renderSummary();
+  if (currentView === 'analytics') renderAnalytics();
+}
+
+async function refreshDevice(id) {
+  try {
+    const r = await fetch(`/api/devices/${id}/status`);
+    if (!r.ok) return;
+    const updated = await r.json();
+    const idx = allDevices.findIndex(d => d.id === id);
+    if (idx >= 0) allDevices[idx] = updated;
+    updateDeviceCard(updated);
+  } catch(e) {}
+}
+
+// ─────────────────────────────────────────────
+// Render Dashboard
+// ─────────────────────────────────────────────
+function renderDashboard() {
+  const grid = document.getElementById('devicesGrid');
+  const empty = document.getElementById('emptyState');
+
+  if (allDevices.length === 0) {
+    empty.style.display = 'block';
+    // remove old cards
+    grid.querySelectorAll('.device-card').forEach(c => c.remove());
+    return;
+  }
+  empty.style.display = 'none';
+
+  // Add cards for new devices
+  allDevices.forEach(d => {
+    if (!document.getElementById('card-' + d.id)) {
+      grid.appendChild(createDeviceCard(d));
+    }
+  });
+
+  renderSummary();
+}
+
+function createDeviceCard(d) {
+  const el = document.createElement('div');
+  el.className = 'device-card' + (d.online ? '' : ' offline');
+  el.id = 'card-' + d.id;
+
+  el.innerHTML = `
+    <div class="device-card-header">
+      <div>
+        <div class="device-name">${esc(d.name)}</div>
+        <div class="device-ip">${esc(d.ip)}</div>
+      </div>
+      <div class="status-dot ${d.online ? 'online' : 'offline'}" id="dot-${d.id}" title="${d.online ? 'Online' : 'Offline'}"></div>
+    </div>
+
+    <div class="power-big" id="power-${d.id}">
+      ${d.power_w.toFixed(1)}<span> W</span>
+    </div>
+
+    <div class="sparkline-wrap">
+      <canvas id="spark-${d.id}" height="40"></canvas>
+    </div>
+
+    <div class="metrics-row">
+      <div class="metric">
+        <div class="m-label">Spannung</div>
+        <div class="m-value" id="volt-${d.id}">${d.voltage_v} V</div>
+      </div>
+      <div class="metric">
+        <div class="m-label">Strom</div>
+        <div class="m-value" id="curr-${d.id}">${d.current_a} A</div>
+      </div>
+      <div class="metric">
+        <div class="m-label">Energie</div>
+        <div class="m-value" id="enrg-${d.id}">${d.energy_kwh} kWh</div>
+      </div>
+    </div>
+
+    <div class="device-actions">
+      <label class="toggle" title="${d.relay_on ? 'Ausschalten' : 'Einschalten'}">
+        <input type="checkbox" id="relay-${d.id}" ${d.relay_on ? 'checked' : ''}
+          onchange="setRelay('${d.id}', this.checked)">
+        <span class="slider"></span>
+      </label>
+      <span class="toggle-label" id="relay-label-${d.id}">${d.relay_on ? 'Ein' : 'Aus'}</span>
+
+      <button class="btn-chart" onclick="openChart('${d.id}')">📈 Verlauf</button>
+      <button class="btn-delete" onclick="deleteDevice('${d.id}')" title="Entfernen">🗑</button>
+    </div>
+  `;
+  return el;
+}
+
+function updateDeviceCard(d) {
+  const card = document.getElementById('card-' + d.id);
+  if (!card) return;
+
+  card.className = 'device-card' + (d.online ? '' : ' offline');
+  const dot = document.getElementById('dot-' + d.id);
+  if (dot) { dot.className = 'status-dot ' + (d.online ? 'online' : 'offline'); dot.title = d.online ? 'Online' : 'Offline'; }
+
+  const pw = document.getElementById('power-' + d.id);
+  if (pw) pw.innerHTML = `${d.power_w.toFixed(1)}<span> W</span>`;
+
+  const v = document.getElementById('volt-' + d.id);   if (v) v.textContent = d.voltage_v + ' V';
+  const c = document.getElementById('curr-' + d.id);   if (c) c.textContent = d.current_a + ' A';
+  const e = document.getElementById('enrg-' + d.id);   if (e) e.textContent = d.energy_kwh + ' kWh';
+
+  const relay = document.getElementById('relay-' + d.id);
+  if (relay) relay.checked = d.relay_on;
+  const lbl = document.getElementById('relay-label-' + d.id);
+  if (lbl) lbl.textContent = d.relay_on ? 'Ein' : 'Aus';
+
+  updateSparkline(d.id);
+}
+
+function renderSummary() {
+  const total   = allDevices.length;
+  const online  = allDevices.filter(d => d.online).length;
+  const power   = allDevices.reduce((s, d) => s + (d.power_w || 0), 0);
+  const energy  = allDevices.reduce((s, d) => s + (d.energy_kwh || 0), 0);
+
+  document.getElementById('s-total').textContent  = total;
+  document.getElementById('s-online').textContent = online;
+  document.getElementById('s-power').textContent  = power.toFixed(1);
+  document.getElementById('s-energy').textContent = energy.toFixed(3);
+  document.getElementById('deviceCount').textContent = total;
+}
+
+// ─────────────────────────────────────────────
+// Sparkline
+// ─────────────────────────────────────────────
+async function updateSparkline(id) {
+  const r = await fetch(`/api/devices/${id}/history`);
+  const history = await r.json();
+  if (!history.length) return;
+
+  const canvas = document.getElementById('spark-' + id);
+  if (!canvas) return;
+
+  const labels = history.map(h => h.ts.slice(11, 16));
+  const data   = history.map(h => h.watt);
+
+  if (miniCharts[id]) {
+    miniCharts[id].data.labels = labels;
+    miniCharts[id].data.datasets[0].data = data;
+    miniCharts[id].update('none');
+    return;
+  }
+
+  miniCharts[id] = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        borderColor: '#f97316',
+        borderWidth: 1.5,
+        fill: true,
+        backgroundColor: 'rgba(249,115,22,0.1)',
+        tension: 0.4,
+        pointRadius: 0,
+      }]
+    },
+    options: {
+      animation: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { display: false },
+        y: { display: false, min: 0 }
+      },
+      responsive: true,
+      maintainAspectRatio: false,
+    }
+  });
+}
+
+// ─────────────────────────────────────────────
+// Chart Modal
+// ─────────────────────────────────────────────
+async function openChart(id) {
+  const dev = allDevices.find(d => d.id === id);
+  if (!dev) return;
+
+  document.getElementById('chartModalTitle').textContent = dev.name + ' – Leistungsverlauf';
+  document.getElementById('chartModalSub').textContent   = `IP: ${dev.ip} · Aktuell: ${dev.power_w} W`;
+
+  const r = await fetch(`/api/devices/${id}/history`);
+  const history = await r.json();
+  const labels  = history.map(h => h.ts.slice(11, 16));
+  const data    = history.map(h => h.watt);
+
+  if (modalChart) { modalChart.destroy(); modalChart = null; }
+
+  const canvas = document.getElementById('chartModalCanvas');
+  modalChart = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Leistung (W)',
+        data,
+        borderColor: '#f97316',
+        backgroundColor: 'rgba(249,115,22,0.12)',
+        borderWidth: 2,
+        tension: 0.4,
+        fill: true,
+        pointRadius: 2,
+        pointBackgroundColor: '#f97316',
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.parsed.y.toFixed(1)} W`
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#8b949e', font: { size: 10 } }, grid: { color: '#30363d' } },
+        y: { ticks: { color: '#8b949e', font: { size: 10 }, callback: v => v + ' W' }, grid: { color: '#30363d' }, min: 0 }
+      },
+      responsive: true,
+      maintainAspectRatio: false,
+    }
+  });
+
+  document.getElementById('chartModal').classList.add('show');
+}
+
+// ─────────────────────────────────────────────
+// Analytics View
+// ─────────────────────────────────────────────
+async function renderAnalytics() {
+  const layout = document.getElementById('analyticsLayout');
+  if (allDevices.length === 0) {
+    layout.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="icon">📊</div><h3>Keine Daten vorhanden</h3><p>Füge Geräte hinzu, um Diagramme zu sehen.</p></div>`;
+    return;
+  }
+
+  layout.innerHTML = '';
+
+  // Power distribution pie
+  const pieCard = document.createElement('div');
+  pieCard.className = 'chart-card';
+  pieCard.innerHTML = `<h3>Leistungsverteilung</h3><div class="chart-sub">Aktuelle Watt-Verteilung je Gerät</div><div class="chart-wrap"><canvas id="pieChart"></canvas></div>`;
+  layout.appendChild(pieCard);
+
+  // Total power over time
+  const lineCard = document.createElement('div');
+  lineCard.className = 'chart-card';
+  lineCard.innerHTML = `<h3>Gesamtleistung (letzte Messungen)</h3><div class="chart-sub">Summe aller Geräte</div><div class="chart-wrap"><canvas id="totalLine"></canvas></div>`;
+  layout.appendChild(lineCard);
+
+  // Per-device chart (full width)
+  const fullCard = document.createElement('div');
+  fullCard.className = 'chart-card full';
+  fullCard.innerHTML = `<h3>Verbrauch je Gerät</h3><div class="chart-sub">Leistungsverlauf der letzten Messungen</div><div class="chart-wrap" style="height:220px"><canvas id="multiLine"></canvas></div>`;
+  layout.appendChild(fullCard);
+
+  await new Promise(r => setTimeout(r, 50));
+
+  // Pie
+  new Chart(document.getElementById('pieChart'), {
+    type: 'doughnut',
+    data: {
+      labels: allDevices.map(d => d.name),
+      datasets: [{ data: allDevices.map(d => d.power_w || 0), backgroundColor: ['#f97316','#3fb950','#58a6ff','#d29922','#f85149','#bc8cff'] }]
+    },
+    options: {
+      plugins: { legend: { position: 'right', labels: { color: '#8b949e', font: { size: 11 } } } },
+      responsive: true, maintainAspectRatio: false,
+    }
+  });
+
+  // Fetch all histories
+  const histories = {};
+  for (const dev of allDevices) {
+    const r = await fetch(`/api/devices/${dev.id}/history`);
+    histories[dev.id] = await r.json();
+  }
+
+  // Total line
+  const refHist = histories[allDevices[0].id] || [];
+  const labels  = refHist.map(h => h.ts.slice(11, 16));
+  const totals  = labels.map((_, i) =>
+    allDevices.reduce((s, d) => s + ((histories[d.id][i]?.watt) || 0), 0)
+  );
+
+  new Chart(document.getElementById('totalLine'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Gesamt W',
+        data: totals,
+        borderColor: '#f97316',
+        backgroundColor: 'rgba(249,115,22,0.1)',
+        borderWidth: 2, tension: 0.4, fill: true, pointRadius: 0,
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#8b949e', font:{size:10} }, grid:{color:'#30363d'} },
+        y: { ticks: { color:'#8b949e', font:{size:10}, callback: v => v+' W' }, grid:{color:'#30363d'}, min:0 }
+      },
+      responsive: true, maintainAspectRatio: false,
+    }
+  });
+
+  // Multi-device line
+  const colors = ['#f97316','#3fb950','#58a6ff','#d29922','#f85149','#bc8cff'];
+  new Chart(document.getElementById('multiLine'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: allDevices.map((dev, i) => ({
+        label: dev.name,
+        data: (histories[dev.id] || []).map(h => h.watt),
+        borderColor: colors[i % colors.length],
+        borderWidth: 1.5,
+        tension: 0.4,
+        fill: false,
+        pointRadius: 0,
+      }))
+    },
+    options: {
+      plugins: { legend: { labels: { color:'#8b949e', font:{size:11} } } },
+      scales: {
+        x: { ticks:{color:'#8b949e',font:{size:10}}, grid:{color:'#30363d'} },
+        y: { ticks:{color:'#8b949e',font:{size:10}, callback:v=>v+' W'}, grid:{color:'#30363d'}, min:0 }
+      },
+      responsive: true, maintainAspectRatio: false,
+    }
+  });
+}
+
+// ─────────────────────────────────────────────
+// Devices List View
+// ─────────────────────────────────────────────
+function renderDevicesList() {
+  const el = document.getElementById('devicesList');
+  if (!allDevices.length) {
+    el.innerHTML = `<div style="padding:20px;color:var(--muted);font-size:14px;text-align:center">Keine Geräte vorhanden</div>`;
+    return;
+  }
+  el.innerHTML = allDevices.map(d => `
+    <div class="settings-row">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="status-dot ${d.online?'online':'offline'}"></div>
+        <div>
+          <div class="s-title">${esc(d.name)}</div>
+          <div class="s-desc">${esc(d.ip)} · ${d.type} · ${d.online?'Online':'Offline'}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span style="font-size:14px;font-weight:600;color:var(--accent)">${d.power_w} W</span>
+        <button class="btn btn-ghost" style="font-size:12px;padding:5px 10px" onclick="setRelay('${d.id}', ${!d.relay_on})">${d.relay_on?'Aus':'Ein'}</button>
+        <button class="btn-delete" onclick="deleteDevice('${d.id}')">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─────────────────────────────────────────────
+// Relay
+// ─────────────────────────────────────────────
+async function setRelay(id, on) {
+  const r = await fetch(`/api/devices/${id}/relay`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({on})
+  });
+  const data = await r.json();
+  if (data.ok) {
+    const dev = allDevices.find(d => d.id === id);
+    if (dev) dev.relay_on = on;
+    const cb = document.getElementById('relay-' + id);
+    if (cb) cb.checked = on;
+    const lbl = document.getElementById('relay-label-' + id);
+    if (lbl) lbl.textContent = on ? 'Ein' : 'Aus';
+    toast(on ? '✅ Eingeschaltet' : '⭕ Ausgeschaltet', 'success');
+  } else {
+    toast('❌ ' + (data.error || 'Fehler'), 'error');
+    // Revert toggle
+    const cb = document.getElementById('relay-' + id);
+    if (cb) cb.checked = !on;
+  }
+}
+
+// ─────────────────────────────────────────────
+// Add / Delete Device
+// ─────────────────────────────────────────────
+function openAddModal() {
+  document.getElementById('newName').value = '';
+  document.getElementById('newIP').value   = '';
+  document.getElementById('addModal').classList.add('show');
+  setTimeout(() => document.getElementById('newName').focus(), 100);
+}
+
+async function addDevice() {
+  const name = document.getElementById('newName').value.trim() || 'Shelly Gerät';
+  const ip   = document.getElementById('newIP').value.trim();
+  const type = document.getElementById('newType').value;
+  if (!ip) { toast('❌ Bitte IP-Adresse eingeben', 'error'); return; }
+
+  const r = await fetch('/api/devices', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({name, ip, type})
+  });
+  const dev = await r.json();
+  allDevices.push(dev);
+  closeModal('addModal');
+  renderDashboard();
+  renderSummary();
+  toast('✅ Gerät hinzugefügt', 'success');
+  // Immediately try to get status
+  await refreshDevice(dev.id);
+}
+
+async function deleteDevice(id) {
+  if (!confirm('Gerät wirklich entfernen?')) return;
+  await fetch(`/api/devices/${id}`, {method: 'DELETE'});
+  allDevices = allDevices.filter(d => d.id !== id);
+  const card = document.getElementById('card-' + id);
+  if (card) card.remove();
+  if (miniCharts[id]) { miniCharts[id].destroy(); delete miniCharts[id]; }
+  renderSummary();
+  renderDevicesList();
+  if (allDevices.length === 0) document.getElementById('emptyState').style.display = 'block';
+  toast('🗑 Gerät entfernt', 'success');
+}
+
+// ─────────────────────────────────────────────
+// Demo
+// ─────────────────────────────────────────────
+async function loadDemo() {
+  const r = await fetch('/api/demo', {method:'POST'});
+  const d = await r.json();
+  if (d.added > 0) {
+    toast(`✅ ${d.added} Demo-Geräte geladen`, 'success');
+    await loadDevices();
+  } else {
+    toast('ℹ Demo-Geräte bereits vorhanden', 'success');
+  }
+}
+
+// ─────────────────────────────────────────────
+// Settings
+// ─────────────────────────────────────────────
+function updateInterval() {
+  INTERVAL = parseInt(document.getElementById('refreshInterval').value, 10);
+  clearInterval(refreshTimer);
+  refreshTimer = setInterval(refreshAll, INTERVAL);
+  toast('⚙️ Intervall aktualisiert', 'success');
+}
+
+// ─────────────────────────────────────────────
+// Modal / Toast helpers
+// ─────────────────────────────────────────────
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(o =>
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); })
+);
+
+function toast(msg, type='success') {
+  const wrap = document.getElementById('toastWrap');
+  const el   = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function esc(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+// ─────────────────────────────────────────────
+// Init
+// ─────────────────────────────────────────────
+(async () => {
+  await loadUser();
+  await loadDevices();
+  await refreshAll();
+  refreshTimer = setInterval(refreshAll, INTERVAL);
+})();
+</script>
+</body>
+</html>
