@@ -123,4 +123,12 @@ production, evaluates each device's rules, and switches relays accordingly.
   and is lost on restart.
 - Electricity prices come from the free [aWattar API](https://www.awattar.de/) –
   no API key required, but subject to their fair-use limits.
-- This project is not affiliated with Shelly/Allterco Robotics or aWattar.
+- This project is not affiliated with Shelly/Allterco Robotics, Tasmota,
+  TP-Link Technologies (Kasa/Tapo) or aWattar.
+- The Inter font (`static/fonts/`) is self-hosted under the
+  [SIL Open Font License 1.1](https://openfontlicense.org/) so no requests
+  go to Google Fonts.
+
+## License
+
+MIT – see [LICENSE](LICENSE).
