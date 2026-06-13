@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="{{ lang }}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -364,21 +364,21 @@
   </div>
 
   <nav class="nav">
-    <div class="nav-section">Übersicht</div>
+    <div class="nav-section">{{ t.nav_overview }}</div>
     <div class="nav-item active" onclick="showView('dashboard', this)">
-      Dashboard
+      {{ t.nav_dashboard }}
       <span class="nav-badge" id="deviceCount">0</span>
     </div>
     <div class="nav-item" onclick="showView('analytics', this)">
-      Auswertung
+      {{ t.nav_analytics }}
     </div>
 
-    <div class="nav-section" style="margin-top:10px">Verwaltung</div>
+    <div class="nav-section" style="margin-top:10px">{{ t.nav_management }}</div>
     <div class="nav-item" onclick="showView('devices', this)">
-      Geräte
+      {{ t.nav_devices }}
     </div>
     <div class="nav-item" onclick="showView('settings', this)">
-      Einstellungen
+      {{ t.nav_settings }}
     </div>
   </nav>
 
@@ -387,9 +387,9 @@
       <div class="avatar" id="avatarLetter">A</div>
       <div class="user-info">
         <div class="user-name" id="userNameLabel">Admin</div>
-        <div class="user-role">Administrator</div>
+        <div class="user-role">{{ t.administrator }}</div>
       </div>
-      <div class="logout-btn" title="Abmelden">↩</div>
+      <div class="logout-btn" title="{{ t.logout }}">↩</div>
     </div>
   </div>
 </aside>
@@ -400,12 +400,12 @@
   <!-- Topbar -->
   <div class="topbar">
     <div>
-      <h1 id="viewTitle">Dashboard</h1>
-      <div class="subtitle" id="viewSubtitle">Übersicht aller verbundenen Geräte</div>
+      <h1 id="viewTitle">{{ t.view_dashboard_title }}</h1>
+      <div class="subtitle" id="viewSubtitle">{{ t.view_dashboard_subtitle }}</div>
     </div>
     <div class="topbar-actions">
-      <button class="btn btn-ghost" onclick="refreshAll()">Aktualisieren</button>
-      <button class="btn btn-primary" onclick="openAddModal()">+ Gerät hinzufügen</button>
+      <button class="btn btn-ghost" onclick="refreshAll()">{{ t.refresh }}</button>
+      <button class="btn btn-primary" onclick="openAddModal()">{{ t.add_device }}</button>
     </div>
   </div>
 
@@ -415,51 +415,51 @@
     <div class="view active" id="view-dashboard">
       <div class="summary-grid" id="summaryGrid">
         <div class="summary-card">
-          <div class="label">Geräte gesamt</div>
-          <div class="value"><span id="s-total">0</span><span class="unit">Stk.</span></div>
+          <div class="label">{{ t.total_devices }}</div>
+          <div class="value"><span id="s-total">0</span><span class="unit">{{ t.units }}</span></div>
         </div>
         <div class="summary-card">
-          <div class="label">Online</div>
-          <div class="value"><span id="s-online">0</span><span class="unit">Stk.</span></div>
+          <div class="label">{{ t.online }}</div>
+          <div class="value"><span id="s-online">0</span><span class="unit">{{ t.units }}</span></div>
         </div>
         <div class="summary-card">
-          <div class="label">Aktuelle Leistung</div>
+          <div class="label">{{ t.current_power }}</div>
           <div class="value"><span id="s-power">0</span><span class="unit">W</span></div>
         </div>
         <div class="summary-card">
-          <div class="label">Energie heute</div>
+          <div class="label">{{ t.energy_today }}</div>
           <div class="value"><span id="s-energy">0</span><span class="unit">kWh</span></div>
         </div>
         <div class="summary-card">
-          <div class="label">Strompreis aktuell</div>
+          <div class="label">{{ t.current_price }}</div>
           <div class="value"><span id="s-price">–</span><span class="unit">ct/kWh</span></div>
           <div class="trend" id="s-price-time" style="color:var(--muted)"></div>
         </div>
         <div class="summary-card" id="pvSummaryCard" style="display:none">
-          <div class="label">PV-Erzeugung</div>
+          <div class="label">{{ t.pv_production }}</div>
           <div class="value"><span id="s-pv">0</span><span class="unit">W</span></div>
         </div>
       </div>
 
       <div class="chart-card" id="priceChartCard" style="margin-bottom:24px; display:none">
-        <h3>Strompreis heute (aWattar Day-Ahead)</h3>
-        <div class="chart-sub">Aktuelle Stunde hervorgehoben · inkl. Aufschlag, falls in den Einstellungen hinterlegt</div>
+        <h3>{{ t.price_chart_title }}</h3>
+        <div class="chart-sub">{{ t.price_chart_subtitle }}</div>
         <div class="chart-wrap" style="height:160px">
           <canvas id="priceChart"></canvas>
         </div>
       </div>
 
       <div class="section-header">
-        <div class="section-title">Meine Geräte</div>
+        <div class="section-title">{{ t.my_devices }}</div>
       </div>
 
       <div class="devices-grid" id="devicesGrid">
         <div class="empty-state" id="emptyState">
-          <h3>Noch keine Geräte</h3>
-          <p>Füge dein erstes Gerät hinzu, um es hier zu überwachen und zu steuern.</p>
-          <button class="btn btn-primary" onclick="openAddModal()">+ Gerät hinzufügen</button>
+          <h3>{{ t.no_devices_title }}</h3>
+          <p>{{ t.no_devices_text }}</p>
+          <button class="btn btn-primary" onclick="openAddModal()">{{ t.add_device }}</button>
           <br><br>
-          <button class="btn btn-ghost" onclick="loadDemo()">Demo-Daten laden</button>
+          <button class="btn btn-ghost" onclick="loadDemo()">{{ t.load_demo }}</button>
         </div>
       </div>
     </div>
@@ -468,8 +468,8 @@
     <div class="view" id="view-analytics">
       <div class="analytics-layout" id="analyticsLayout">
         <div class="empty-state" style="grid-column:1/-1">
-          <h3>Keine Daten vorhanden</h3>
-          <p>Füge Geräte hinzu und lass sie einige Minuten laufen, um Verbrauchsdiagramme zu sehen.</p>
+          <h3>{{ t.no_data_title }}</h3>
+          <p>{{ t.no_data_text }}</p>
         </div>
       </div>
     </div>
@@ -477,45 +477,55 @@
     <!-- devices list view -->
     <div class="view" id="view-devices">
       <div class="settings-section">
-        <h3>Verbundene Geräte</h3>
+        <h3>{{ t.connected_devices }}</h3>
         <div id="devicesList"></div>
       </div>
-      <button class="btn btn-primary" onclick="openAddModal()">+ Gerät hinzufügen</button>
+      <button class="btn btn-primary" onclick="openAddModal()">{{ t.add_device }}</button>
       &nbsp;
-      <button class="btn btn-ghost" onclick="loadDemo()">Demo-Daten laden</button>
+      <button class="btn btn-ghost" onclick="loadDemo()">{{ t.load_demo }}</button>
     </div>
 
     <!-- settings view -->
     <div class="view" id="view-settings">
       <div class="settings-section">
-        <h3>Allgemein</h3>
+        <h3>{{ t.settings_general }}</h3>
         <div class="settings-row">
           <div>
-            <div class="s-title">Aktualisierungsintervall</div>
-            <div class="s-desc">Wie oft Gerätedaten abgerufen werden</div>
+            <div class="s-title">{{ t.language }}</div>
+            <div class="s-desc">{{ t.language_desc }}</div>
           </div>
-          <select id="refreshInterval" style="width:120px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:8px;font-family:Inter,sans-serif;font-size:13px;" onchange="updateInterval()">
-            <option value="5000">5 Sek.</option>
-            <option value="10000" selected>10 Sek.</option>
-            <option value="30000">30 Sek.</option>
-            <option value="60000">60 Sek.</option>
+          <select id="languageSelect" style="width:120px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:8px;font-family:Inter,sans-serif;font-size:13px;" onchange="changeLanguage()">
+            <option value="de" {{ 'selected' if lang == 'de' else '' }}>{{ t.lang_de }}</option>
+            <option value="en" {{ 'selected' if lang == 'en' else '' }}>{{ t.lang_en }}</option>
           </select>
         </div>
         <div class="settings-row">
           <div>
-            <div class="s-title">Passwort ändern</div>
-            <div class="s-desc">Zugangspasswort für dieses Dashboard</div>
+            <div class="s-title">{{ t.refresh_interval }}</div>
+            <div class="s-desc">{{ t.refresh_interval_desc }}</div>
           </div>
-          <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;">Ändern</button>
+          <select id="refreshInterval" style="width:120px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:8px;font-family:Inter,sans-serif;font-size:13px;" onchange="updateInterval()">
+            <option value="5000">{{ t.sec_5 }}</option>
+            <option value="10000" selected>{{ t.sec_10 }}</option>
+            <option value="30000">{{ t.sec_30 }}</option>
+            <option value="60000">{{ t.sec_60 }}</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="s-title">{{ t.change_password }}</div>
+            <div class="s-desc">{{ t.change_password_desc }}</div>
+          </div>
+          <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;">{{ t.change }}</button>
         </div>
       </div>
 
       <div class="settings-section">
-        <h3>Automatisierung & Strompreis</h3>
+        <h3>{{ t.settings_automation }}</h3>
         <div class="settings-row">
           <div>
-            <div class="s-title">Automatisierung aktiv</div>
-            <div class="s-desc">Globaler Schalter – schaltet Geräte gemäß ihren Regeln (Preis/PV-Überschuss)</div>
+            <div class="s-title">{{ t.automation_enabled }}</div>
+            <div class="s-desc">{{ t.automation_enabled_desc }}</div>
           </div>
           <label class="toggle">
             <input type="checkbox" id="globalAutoEnabled" onchange="saveAutomationSettings()">
@@ -524,45 +534,45 @@
         </div>
         <div class="settings-row">
           <div>
-            <div class="s-title">Prüfintervall</div>
-            <div class="s-desc">Wie oft Preis & PV geprüft und Geräte geschaltet werden</div>
+            <div class="s-title">{{ t.check_interval }}</div>
+            <div class="s-desc">{{ t.check_interval_desc }}</div>
           </div>
           <select id="autoInterval" style="width:120px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:8px;font-family:Inter,sans-serif;font-size:13px;" onchange="saveAutomationSettings()">
-            <option value="60">1 Min.</option>
-            <option value="300">5 Min.</option>
-            <option value="600">10 Min.</option>
-            <option value="900">15 Min.</option>
+            <option value="60">{{ t.min_1 }}</option>
+            <option value="300">{{ t.min_5 }}</option>
+            <option value="600">{{ t.min_10 }}</option>
+            <option value="900">{{ t.min_15 }}</option>
           </select>
         </div>
         <div class="settings-row">
           <div>
-            <div class="s-title">Preisaufschlag</div>
-            <div class="s-desc">Wird auf den aWattar-Spotpreis addiert (Steuern, Netzgebühren, Marge), in ct/kWh</div>
+            <div class="s-title">{{ t.price_markup }}</div>
+            <div class="s-desc">{{ t.price_markup_desc }}</div>
           </div>
           <input id="priceMarkup" type="number" step="0.1" style="width:90px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:8px;font-family:Inter,sans-serif;font-size:13px;" onchange="saveAutomationSettings()">
         </div>
         <div class="settings-row">
           <div>
-            <div class="s-title">Jetzt prüfen</div>
-            <div class="s-desc">Automatisierung sofort einmal für alle Geräte ausführen</div>
+            <div class="s-title">{{ t.check_now }}</div>
+            <div class="s-desc">{{ t.check_now_desc }}</div>
           </div>
-          <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;" onclick="runAutomationNow()">▶ Ausführen</button>
+          <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;" onclick="runAutomationNow()">{{ t.run }}</button>
         </div>
       </div>
 
       <div class="settings-section">
-        <h3>Automatisierungs-Protokoll</h3>
+        <h3>{{ t.automation_log_title }}</h3>
         <div id="automationLog" style="padding:14px 18px"></div>
       </div>
 
       <div class="settings-section">
-        <h3>Info</h3>
+        <h3>{{ t.info }}</h3>
         <div class="settings-row">
-          <div><div class="s-title">Version</div></div>
+          <div><div class="s-title">{{ t.version }}</div></div>
           <div style="font-size:13px;color:var(--muted)">1.0.0</div>
         </div>
         <div class="settings-row">
-          <div><div class="s-title">Unterstützte Schnittstellen</div></div>
+          <div><div class="s-title">{{ t.supported_interfaces }}</div></div>
           <div style="font-size:13px;color:var(--success)">● Shelly (Gen1/Gen2/3), Tasmota, TP-Link Kasa</div>
         </div>
       </div>
@@ -574,37 +584,37 @@
 <!-- add device modal -->
 <div class="modal-overlay" id="addModal">
   <div class="modal">
-    <h2>Gerät hinzufügen</h2>
-    <p>Gib die IP-Adresse deines Geräts ein. Es muss im selben Netzwerk erreichbar sein.</p>
+    <h2>{{ t.add_device_title }}</h2>
+    <p>{{ t.add_device_desc }}</p>
     <div class="form-field">
-      <label>Gerätename</label>
-      <input id="newName" type="text" placeholder="z. B. Wohnzimmer Steckdose" />
+      <label>{{ t.device_name }}</label>
+      <input id="newName" type="text" placeholder="{{ t.device_name_placeholder }}" />
     </div>
     <div class="form-field">
-      <label>IP-Adresse</label>
+      <label>{{ t.ip_address }}</label>
       <input id="newIP" type="text" placeholder="192.168.1.xxx" />
     </div>
     <div class="form-field">
-      <label>Schnittstelle</label>
+      <label>{{ t.interface }}</label>
       <select id="newProtocol">
-        <option value="shelly">Shelly (Gen1 / Gen2 / Gen3)</option>
-        <option value="tasmota">Tasmota</option>
-        <option value="tplink">TP-Link Kasa / Tapo</option>
+        <option value="shelly">{{ t.interface_shelly }}</option>
+        <option value="tasmota">{{ t.interface_tasmota }}</option>
+        <option value="tplink">{{ t.interface_tplink }}</option>
       </select>
     </div>
     <div class="form-field">
-      <label>Gerätetyp</label>
+      <label>{{ t.device_type }}</label>
       <select id="newType">
-        <option value="plug">Plug / Steckdose</option>
-        <option value="relay">Relais</option>
-        <option value="dimmer">Dimmer</option>
-        <option value="em">Energiemesser</option>
-        <option value="pv">PV-Anlage / Wechselrichter</option>
+        <option value="plug">{{ t.type_plug }}</option>
+        <option value="relay">{{ t.type_relay }}</option>
+        <option value="dimmer">{{ t.type_dimmer }}</option>
+        <option value="em">{{ t.type_em }}</option>
+        <option value="pv">{{ t.type_pv }}</option>
       </select>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeModal('addModal')">Abbrechen</button>
-      <button class="btn btn-primary" onclick="addDevice()">Hinzufügen</button>
+      <button class="btn btn-ghost" onclick="closeModal('addModal')">{{ t.cancel }}</button>
+      <button class="btn btn-primary" onclick="addDevice()">{{ t.add }}</button>
     </div>
   </div>
 </div>
@@ -612,13 +622,13 @@
 <!-- chart modal -->
 <div class="modal-overlay" id="chartModal">
   <div class="modal" style="max-width:580px">
-    <h2 id="chartModalTitle">Leistungsverlauf</h2>
+    <h2 id="chartModalTitle">{{ t.power_history }}</h2>
     <p id="chartModalSub" style="margin-bottom:0"></p>
     <div class="chart-modal-wrap">
       <canvas id="chartModalCanvas"></canvas>
     </div>
     <div class="modal-actions" style="margin-top:16px">
-      <button class="btn btn-ghost" onclick="closeModal('chartModal')">Schließen</button>
+      <button class="btn btn-ghost" onclick="closeModal('chartModal')">{{ t.close }}</button>
     </div>
   </div>
 </div>
@@ -626,7 +636,7 @@
 <!-- automation modal -->
 <div class="modal-overlay" id="automationModal">
   <div class="modal">
-    <h2>Automatisierung</h2>
+    <h2>{{ t.automation }}</h2>
     <p id="autoModalDeviceName" style="margin-bottom:18px"></p>
 
     <div class="form-field">
@@ -635,7 +645,7 @@
           <input type="checkbox" id="autoEnabled">
           <span class="slider"></span>
         </label>
-        <span class="toggle-label">Automatisierung für dieses Gerät aktiv</span>
+        <span class="toggle-label">{{ t.automation_device_enabled }}</span>
       </div>
     </div>
 
@@ -645,9 +655,9 @@
           <input type="checkbox" id="autoPriceEnabled">
           <span class="slider"></span>
         </label>
-        <span class="toggle-label">Bei niedrigem Strompreis einschalten</span>
+        <span class="toggle-label">{{ t.auto_price_label }}</span>
       </div>
-      <label>Maximalpreis (ct/kWh)</label>
+      <label>{{ t.max_price }}</label>
       <input id="autoPriceMax" type="number" step="0.1" min="0" />
     </div>
 
@@ -657,28 +667,28 @@
           <input type="checkbox" id="autoPvEnabled">
           <span class="slider"></span>
         </label>
-        <span class="toggle-label">Bei PV-Überschuss einschalten</span>
+        <span class="toggle-label">{{ t.auto_pv_label }}</span>
       </div>
-      <label>Benötigter Überschuss (W)</label>
+      <label>{{ t.required_surplus }}</label>
       <input id="autoPvSurplus" type="number" step="10" min="0" />
     </div>
 
     <div class="form-field">
-      <label>Verknüpfung der Bedingungen</label>
+      <label>{{ t.logic_label }}</label>
       <select id="autoLogic">
-        <option value="OR">ODER – eine Bedingung reicht</option>
-        <option value="AND">UND – beide Bedingungen nötig</option>
+        <option value="OR">{{ t.logic_or_option }}</option>
+        <option value="AND">{{ t.logic_and_option }}</option>
       </select>
     </div>
 
     <div class="form-field">
-      <label>Priorität bei PV-Überschuss (1 = wird zuerst versorgt)</label>
+      <label>{{ t.priority_label }}</label>
       <input id="autoPriority" type="number" min="1" max="99" />
     </div>
 
     <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeModal('automationModal')">Abbrechen</button>
-      <button class="btn btn-primary" onclick="saveAutomation()">Speichern</button>
+      <button class="btn btn-ghost" onclick="closeModal('automationModal')">{{ t.cancel }}</button>
+      <button class="btn btn-primary" onclick="saveAutomation()">{{ t.save }}</button>
     </div>
   </div>
 </div>
@@ -687,6 +697,9 @@
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
+// translations for the current language
+const I18N = {{ t | tojson }};
+
 // app state
 let allDevices = [];
 let miniCharts = {};
@@ -697,11 +710,22 @@ let currentView = 'dashboard';
 
 // view switching
 const viewTitles = {
-  dashboard: ['Dashboard', 'Übersicht aller verbundenen Geräte'],
-  analytics: ['Auswertung', 'Detaillierter Verbrauchsverlauf deiner Geräte'],
-  devices: ['Geräte', 'Verwaltung aller eingebundenen Geräte'],
-  settings: ['Einstellungen', 'Dashboard-Konfiguration'],
+  dashboard: [I18N.view_dashboard_title, I18N.view_dashboard_subtitle],
+  analytics: [I18N.view_analytics_title, I18N.view_analytics_subtitle],
+  devices: [I18N.view_devices_title, I18N.view_devices_subtitle],
+  settings: [I18N.view_settings_title, I18N.view_settings_subtitle],
 };
+
+// language switcher (settings)
+async function changeLanguage() {
+  const lang = document.getElementById('languageSelect').value;
+  await fetch('/api/language', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({lang})
+  });
+  window.location.reload();
+}
 
 function showView(id, el) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -794,7 +818,7 @@ function createDeviceCard(d) {
         <div class="device-name">${esc(d.name)}${isPv ? ' <span class="badge-pv">PV</span>' : ''}</div>
         <div class="device-ip">${esc(d.ip)}</div>
       </div>
-      <div class="status-dot ${d.online ? 'online' : 'offline'}" id="dot-${d.id}" title="${d.online ? 'Online' : 'Offline'}"></div>
+      <div class="status-dot ${d.online ? 'online' : 'offline'}" id="dot-${d.id}" title="${d.online ? I18N.online_status : I18N.offline_status}"></div>
     </div>
 
     <div class="power-big" id="power-${d.id}">
@@ -807,30 +831,30 @@ function createDeviceCard(d) {
 
     <div class="metrics-row">
       <div class="metric">
-        <div class="m-label">Spannung</div>
+        <div class="m-label">${I18N.voltage}</div>
         <div class="m-value" id="volt-${d.id}">${d.voltage_v} V</div>
       </div>
       <div class="metric">
-        <div class="m-label">Strom</div>
+        <div class="m-label">${I18N.current}</div>
         <div class="m-value" id="curr-${d.id}">${d.current_a} A</div>
       </div>
       <div class="metric">
-        <div class="m-label">Energie</div>
+        <div class="m-label">${I18N.energy}</div>
         <div class="m-value" id="enrg-${d.id}">${d.energy_kwh} kWh</div>
       </div>
     </div>
 
     <div class="device-actions">
-      <label class="toggle" title="${d.relay_on ? 'Ausschalten' : 'Einschalten'}">
+      <label class="toggle" title="${d.relay_on ? I18N.turn_off : I18N.turn_on}">
         <input type="checkbox" id="relay-${d.id}" ${d.relay_on ? 'checked' : ''}
           onchange="setRelay('${d.id}', this.checked)">
         <span class="slider"></span>
       </label>
-      <span class="toggle-label" id="relay-label-${d.id}">${d.relay_on ? 'Ein' : 'Aus'}</span>
+      <span class="toggle-label" id="relay-label-${d.id}">${d.relay_on ? I18N.on : I18N.off}</span>
 
-      <button class="btn-chart" onclick="openChart('${d.id}')">Verlauf</button>
+      <button class="btn-chart" onclick="openChart('${d.id}')">${I18N.history}</button>
       ${isPv ? '' : `<button class="btn-chart" id="auto-btn-${d.id}" onclick="openAutomationModal('${d.id}')">${automationLabel(d)}</button>`}
-      <button class="btn-delete" onclick="deleteDevice('${d.id}')" title="Entfernen">Entfernen</button>
+      <button class="btn-delete" onclick="deleteDevice('${d.id}')" title="${I18N.remove}">${I18N.remove}</button>
     </div>
   `;
   return el;
@@ -838,7 +862,7 @@ function createDeviceCard(d) {
 
 function automationLabel(d) {
   const a = d.automation || {};
-  return a.enabled ? 'Automatik: An' : 'Automatik';
+  return a.enabled ? I18N.automation_on : I18N.automation_off;
 }
 
 function updateDeviceCard(d) {
@@ -847,7 +871,7 @@ function updateDeviceCard(d) {
 
   card.className = 'device-card' + (d.online ? '' : ' offline');
   const dot = document.getElementById('dot-' + d.id);
-  if (dot) { dot.className = 'status-dot ' + (d.online ? 'online' : 'offline'); dot.title = d.online ? 'Online' : 'Offline'; }
+  if (dot) { dot.className = 'status-dot ' + (d.online ? 'online' : 'offline'); dot.title = d.online ? I18N.online_status : I18N.offline_status; }
 
   const pw = document.getElementById('power-' + d.id);
   if (pw) pw.innerHTML = `${d.power_w.toFixed(1)}<span> W</span>`;
@@ -859,7 +883,7 @@ function updateDeviceCard(d) {
   const relay = document.getElementById('relay-' + d.id);
   if (relay) relay.checked = d.relay_on;
   const lbl = document.getElementById('relay-label-' + d.id);
-  if (lbl) lbl.textContent = d.relay_on ? 'Ein' : 'Aus';
+  if (lbl) lbl.textContent = d.relay_on ? I18N.on : I18N.off;
 
   const autoBtn = document.getElementById('auto-btn-' + d.id);
   if (autoBtn) autoBtn.textContent = automationLabel(d);
@@ -909,10 +933,10 @@ function renderPrice(d) {
   if (d.effective_ct_per_kwh != null) {
     priceEl.textContent = d.effective_ct_per_kwh.toFixed(2);
     const current = (d.today || []).find(h => h.is_current);
-    timeEl.textContent = current ? `Stunde ${current.hour}` : '';
+    timeEl.textContent = current ? I18N.hour_label.replace('{hour}', current.hour) : '';
   } else {
     priceEl.textContent = '–';
-    timeEl.textContent = 'Preisdaten nicht verfügbar';
+    timeEl.textContent = I18N.price_unavailable;
   }
 
   if (d.today && d.today.length) {
@@ -1006,8 +1030,8 @@ async function openChart(id) {
   const dev = allDevices.find(d => d.id === id);
   if (!dev) return;
 
-  document.getElementById('chartModalTitle').textContent = dev.name + ' – Leistungsverlauf';
-  document.getElementById('chartModalSub').textContent = `IP: ${dev.ip} · Aktuell: ${dev.power_w} W`;
+  document.getElementById('chartModalTitle').textContent = dev.name + ' – ' + I18N.power_history;
+  document.getElementById('chartModalSub').textContent = I18N.chart_modal_sub.replace('{ip}', dev.ip).replace('{power}', dev.power_w);
 
   const r = await fetch(`/api/devices/${id}/history`);
   const history = await r.json();
@@ -1022,7 +1046,7 @@ async function openChart(id) {
     data: {
       labels,
       datasets: [{
-        label: 'Leistung (W)',
+        label: I18N.power_label,
         data,
         borderColor: '#f97316',
         backgroundColor: 'rgba(249,115,22,0.12)',
@@ -1058,7 +1082,7 @@ async function openChart(id) {
 async function renderAnalytics() {
   const layout = document.getElementById('analyticsLayout');
   if (allDevices.length === 0) {
-    layout.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><h3>Keine Daten vorhanden</h3><p>Füge Geräte hinzu, um Diagramme zu sehen.</p></div>`;
+    layout.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><h3>${I18N.no_data_title}</h3><p>${I18N.no_data_text_short}</p></div>`;
     return;
   }
 
@@ -1067,19 +1091,19 @@ async function renderAnalytics() {
   // Power distribution pie
   const pieCard = document.createElement('div');
   pieCard.className = 'chart-card';
-  pieCard.innerHTML = `<h3>Leistungsverteilung</h3><div class="chart-sub">Aktuelle Watt-Verteilung je Gerät</div><div class="chart-wrap"><canvas id="pieChart"></canvas></div>`;
+  pieCard.innerHTML = `<h3>${I18N.power_distribution}</h3><div class="chart-sub">${I18N.power_distribution_sub}</div><div class="chart-wrap"><canvas id="pieChart"></canvas></div>`;
   layout.appendChild(pieCard);
 
   // Total power over time
   const lineCard = document.createElement('div');
   lineCard.className = 'chart-card';
-  lineCard.innerHTML = `<h3>Gesamtleistung (letzte Messungen)</h3><div class="chart-sub">Summe aller Geräte</div><div class="chart-wrap"><canvas id="totalLine"></canvas></div>`;
+  lineCard.innerHTML = `<h3>${I18N.total_power}</h3><div class="chart-sub">${I18N.total_power_sub}</div><div class="chart-wrap"><canvas id="totalLine"></canvas></div>`;
   layout.appendChild(lineCard);
 
   // Per-device chart (full width)
   const fullCard = document.createElement('div');
   fullCard.className = 'chart-card full';
-  fullCard.innerHTML = `<h3>Verbrauch je Gerät</h3><div class="chart-sub">Leistungsverlauf der letzten Messungen</div><div class="chart-wrap" style="height:220px"><canvas id="multiLine"></canvas></div>`;
+  fullCard.innerHTML = `<h3>${I18N.consumption_per_device}</h3><div class="chart-sub">${I18N.consumption_per_device_sub}</div><div class="chart-wrap" style="height:220px"><canvas id="multiLine"></canvas></div>`;
   layout.appendChild(fullCard);
 
   await new Promise(r => setTimeout(r, 50));
@@ -1116,7 +1140,7 @@ async function renderAnalytics() {
     data: {
       labels,
       datasets: [{
-        label: 'Gesamt W',
+        label: I18N.total_w_label,
         data: totals,
         borderColor: '#f97316',
         backgroundColor: 'rgba(249,115,22,0.1)',
@@ -1164,7 +1188,7 @@ async function renderAnalytics() {
 function renderDevicesList() {
   const el = document.getElementById('devicesList');
   if (!allDevices.length) {
-    el.innerHTML = `<div style="padding:20px;color:var(--muted);font-size:14px;text-align:center">Keine Geräte vorhanden</div>`;
+    el.innerHTML = `<div style="padding:20px;color:var(--muted);font-size:14px;text-align:center">${I18N.no_devices}</div>`;
     return;
   }
   el.innerHTML = allDevices.map(d => `
@@ -1173,13 +1197,13 @@ function renderDevicesList() {
         <div class="status-dot ${d.online?'online':'offline'}"></div>
         <div>
           <div class="s-title">${esc(d.name)}</div>
-          <div class="s-desc">${esc(d.ip)} · ${d.type} · ${d.online?'Online':'Offline'}</div>
+          <div class="s-desc">${esc(d.ip)} · ${d.type} · ${d.online?I18N.online_status:I18N.offline_status}</div>
         </div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         <span style="font-size:14px;font-weight:600;color:var(--accent)">${d.power_w} W</span>
-        <button class="btn btn-ghost" style="font-size:12px;padding:5px 10px" onclick="setRelay('${d.id}', ${!d.relay_on})">${d.relay_on?'Aus':'Ein'}</button>
-        <button class="btn-delete" onclick="deleteDevice('${d.id}')" title="Entfernen">Entfernen</button>
+        <button class="btn btn-ghost" style="font-size:12px;padding:5px 10px" onclick="setRelay('${d.id}', ${!d.relay_on})">${d.relay_on?I18N.off:I18N.on}</button>
+        <button class="btn-delete" onclick="deleteDevice('${d.id}')" title="${I18N.remove}">${I18N.remove}</button>
       </div>
     </div>
   `).join('');
@@ -1195,7 +1219,7 @@ function openAutomationModal(id) {
   const a = dev.automation || {};
 
   document.getElementById('autoModalDeviceName').textContent =
-    `Regeln für „${dev.name}“ – wird automatisch ein-/ausgeschaltet, solange die Automatisierung aktiv ist.`;
+    I18N.automation_for_device.replace('{name}', dev.name);
   document.getElementById('autoEnabled').checked = !!a.enabled;
   document.getElementById('autoPriceEnabled').checked = !!a.price_enabled;
   document.getElementById('autoPriceMax').value = a.price_max_ct ?? 15;
@@ -1232,9 +1256,9 @@ async function saveAutomation() {
       updateDeviceCard(dev);
     }
     closeModal('automationModal');
-    toast('Automatisierung gespeichert', 'success');
+    toast(I18N.automation_saved, 'success');
   } else {
-    toast('Fehler beim Speichern', 'error');
+    toast(I18N.save_error, 'error');
   }
 }
 
@@ -1252,10 +1276,10 @@ async function setRelay(id, on) {
     const cb = document.getElementById('relay-' + id);
     if (cb) cb.checked = on;
     const lbl = document.getElementById('relay-label-' + id);
-    if (lbl) lbl.textContent = on ? 'Ein' : 'Aus';
-    toast(on ? 'Eingeschaltet' : 'Ausgeschaltet', 'success');
+    if (lbl) lbl.textContent = on ? I18N.on : I18N.off;
+    toast(on ? I18N.turned_on : I18N.turned_off, 'success');
   } else {
-    toast(data.error || 'Fehler', 'error');
+    toast(data.error || I18N.error, 'error');
     // Revert toggle
     const cb = document.getElementById('relay-' + id);
     if (cb) cb.checked = !on;
@@ -1272,11 +1296,11 @@ function openAddModal() {
 }
 
 async function addDevice() {
-  const name = document.getElementById('newName').value.trim() || 'Smart-Gerät';
+  const name = document.getElementById('newName').value.trim();
   const ip = document.getElementById('newIP').value.trim();
   const type = document.getElementById('newType').value;
   const protocol = document.getElementById('newProtocol').value;
-  if (!ip) { toast('Bitte IP-Adresse eingeben', 'error'); return; }
+  if (!ip) { toast(I18N.please_enter_ip, 'error'); return; }
 
   const r = await fetch('/api/devices', {
     method: 'POST',
@@ -1288,13 +1312,13 @@ async function addDevice() {
   closeModal('addModal');
   renderDashboard();
   renderSummary();
-  toast('Gerät hinzugefügt', 'success');
+  toast(I18N.device_added, 'success');
   // Immediately try to get status
   await refreshDevice(dev.id);
 }
 
 async function deleteDevice(id) {
-  if (!confirm('Gerät wirklich entfernen?')) return;
+  if (!confirm(I18N.confirm_delete_device)) return;
   await fetch(`/api/devices/${id}`, {method: 'DELETE'});
   allDevices = allDevices.filter(d => d.id !== id);
   const card = document.getElementById('card-' + id);
@@ -1303,7 +1327,7 @@ async function deleteDevice(id) {
   renderSummary();
   renderDevicesList();
   if (allDevices.length === 0) document.getElementById('emptyState').style.display = 'block';
-  toast('Gerät entfernt', 'success');
+  toast(I18N.device_removed, 'success');
 }
 
 // demo data
@@ -1311,10 +1335,10 @@ async function loadDemo() {
   const r = await fetch('/api/demo', {method:'POST'});
   const d = await r.json();
   if (d.added > 0) {
-    toast(`${d.added} Demo-Geräte geladen`, 'success');
+    toast(I18N.demo_devices_loaded.replace('{count}', d.added), 'success');
     await loadDevices();
   } else {
-    toast('Demo-Geräte bereits vorhanden', 'success');
+    toast(I18N.demo_devices_exist, 'success');
   }
 }
 
@@ -1323,7 +1347,7 @@ function updateInterval() {
   INTERVAL = parseInt(document.getElementById('refreshInterval').value, 10);
   clearInterval(refreshTimer);
   refreshTimer = setInterval(refreshAll, INTERVAL);
-  toast('Intervall aktualisiert', 'success');
+  toast(I18N.interval_updated, 'success');
 }
 
 // global automation + log
@@ -1346,14 +1370,14 @@ async function saveAutomationSettings() {
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify(payload)
   });
-  toast('Automatisierungseinstellungen gespeichert', 'success');
-  loadPrice(); // Aufschlag beeinflusst den angezeigten effektiven Preis
+  toast(I18N.automation_settings_saved, 'success');
+  loadPrice(); // markup affects the displayed effective price
 }
 
 async function runAutomationNow() {
   const r = await fetch('/api/automation/run', {method: 'POST'});
   await r.json();
-  toast('Automatisierung ausgeführt', 'success');
+  toast(I18N.automation_run, 'success');
   await loadAutomationLog();
   await refreshAll();
 }
@@ -1364,11 +1388,11 @@ async function loadAutomationLog() {
   const el = document.getElementById('automationLog');
   if (!el) return;
   if (!log.length) {
-    el.innerHTML = '<div style="color:var(--muted);font-size:13px">Noch keine Aktionen protokolliert.</div>';
+    el.innerHTML = `<div style="color:var(--muted);font-size:13px">${I18N.automation_log_empty}</div>`;
     return;
   }
   el.innerHTML = log.map(e => {
-    const label = e.action === 'ein' ? 'eingeschaltet' : e.action === 'aus' ? 'ausgeschaltet' : 'Fehler';
+    const label = e.action === 'ein' ? I18N.action_on : e.action === 'aus' ? I18N.action_off : I18N.error;
     return `
       <div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
         <span style="color:var(--muted)">${esc(e.ts.slice(0,16).replace('T',' '))}</span>
@@ -1410,7 +1434,7 @@ function esc(str) {
   await refreshAll();
   await loadPrice();
   refreshTimer = setInterval(refreshAll, INTERVAL);
-  setInterval(loadPrice, 5 * 60 * 1000); // Strompreis alle 5 Min. aktualisieren
+  setInterval(loadPrice, 5 * 60 * 1000); // refresh electricity price every 5 min
 })();
 </script>
 </body>

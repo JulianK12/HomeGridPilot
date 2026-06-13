@@ -11,6 +11,7 @@ import threading
 from functools import wraps
 
 import devices
+from translations import TRANSLATIONS, get_translations
 
 load_dotenv()
 
@@ -79,11 +80,18 @@ def default_automation_config():
         "priority": 10,
     }
 
+def get_lang():
+    lang = request.cookies.get("lang", "de")
+    return lang if lang in TRANSLATIONS else "de"
+
+def tr(key):
+    return get_translations(get_lang())[key]
+
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if not session.get("logged_in"):
-            return jsonify({"error": "Unauthorized"}), 401
+            return jsonify({"error": tr("unauthorized")}), 401
         return f(*args, **kwargs)
     return decorated
 
@@ -91,20 +99,38 @@ def login_required(f):
 def index():
     if not session.get("logged_in"):
         return redirect(url_for("login_page"))
-    return render_template("dashboard.html")
+    lang = get_lang()
+    return render_template("dashboard.html", lang=lang, t=get_translations(lang))
 
 @app.route("/login")
 def login_page():
     if session.get("logged_in"):
         return redirect(url_for("index"))
-    return render_template("login.html")
+    lang = get_lang()
+    return render_template("login.html", lang=lang, t=get_translations(lang))
+
+@app.route("/api/language", methods=["POST"])
+def set_language():
+    data = request.get_json() or {}
+    lang = data.get("lang", "de")
+    if lang not in TRANSLATIONS:
+        lang = "de"
+    resp = jsonify({"ok": True, "lang": lang})
+    resp.set_cookie(
+        "lang", lang,
+        max_age=60 * 60 * 24 * 365,
+        samesite="Lax",
+        httponly=True,
+        secure=app.config["SESSION_COOKIE_SECURE"],
+    )
+    return resp
 
 @app.route("/api/login", methods=["POST"])
 def login():
     ip = request.remote_addr
     attempt = LOGIN_ATTEMPTS.get(ip)
     if attempt and attempt["locked_until"] > time.time():
-        return jsonify({"ok": False, "error": "Zu viele Fehlversuche, bitte später erneut versuchen"}), 429
+        return jsonify({"ok": False, "error": tr("too_many_attempts")}), 429
 
     data = request.get_json() or {}
     username = data.get("username", "")
@@ -124,7 +150,7 @@ def login():
     if attempt["count"] >= MAX_LOGIN_ATTEMPTS:
         attempt["locked_until"] = time.time() + LOGIN_LOCKOUT_SECONDS
         attempt["count"] = 0
-    return jsonify({"ok": False, "error": "Ungültiger Benutzername oder Passwort"}), 401
+    return jsonify({"ok": False, "error": tr("invalid_credentials")}), 401
 
 @app.route("/api/logout", methods=["POST"])
 def logout():
@@ -148,14 +174,14 @@ def add_device():
     data = request.get_json()
     device_id = f"dev_{int(time.time()*1000)}"
     ip = data.get("ip", "").strip()
-    name = data.get("name", "Smart-Gerät").strip()
+    name = data.get("name", "").strip() or tr("default_device_name")
     device_type = data.get("type", "plug")
     protocol = data.get("protocol", "shelly")
     if protocol not in devices.PROTOCOLS:
         protocol = "shelly"
 
     if not ip:
-        return jsonify({"error": "IP-Adresse erforderlich"}), 400
+        return jsonify({"error": tr("ip_required")}), 400
 
     device = {
         "id": device_id,
@@ -183,13 +209,13 @@ def delete_device(device_id):
         del DEVICES[device_id]
         power_history.pop(device_id, None)
         return jsonify({"ok": True})
-    return jsonify({"error": "Nicht gefunden"}), 404
+    return jsonify({"error": tr("not_found")}), 404
 
 @app.route("/api/devices/<device_id>/status")
 @login_required
 def device_status(device_id):
     if device_id not in DEVICES:
-        return jsonify({"error": "Nicht gefunden"}), 404
+        return jsonify({"error": tr("not_found")}), 404
 
     device = DEVICES[device_id]
     status = devices.fetch_status(device)
@@ -207,7 +233,7 @@ def device_status(device_id):
 @login_required
 def set_relay(device_id):
     if device_id not in DEVICES:
-        return jsonify({"error": "Nicht gefunden"}), 404
+        return jsonify({"error": tr("not_found")}), 404
 
     data = request.get_json()
     turn_on = bool(data.get("on", False))
@@ -215,7 +241,7 @@ def set_relay(device_id):
 
     if devices.set_relay(device, turn_on):
         return jsonify({"ok": True, "relay_on": turn_on})
-    return jsonify({"ok": False, "error": "Gerät nicht erreichbar"}), 503
+    return jsonify({"ok": False, "error": tr("device_unreachable")}), 503
 
 @app.route("/api/devices/<device_id>/history")
 @login_required
@@ -287,10 +313,10 @@ def price():
 @login_required
 def add_demo():
     demo_devices = [
-        {"name": "Wohnzimmer Lampe", "ip": "192.168.1.100", "type": "plug"},
-        {"name": "Büro PC", "ip": "192.168.1.101", "type": "plug"},
-        {"name": "Kühlschrank", "ip": "192.168.1.102", "type": "plug"},
-        {"name": "PV-Wechselrichter", "ip": "192.168.1.103", "type": "pv"},
+        {"name": tr("demo_living_room_lamp"), "ip": "192.168.1.100", "type": "plug"},
+        {"name": tr("demo_office_pc"), "ip": "192.168.1.101", "type": "plug"},
+        {"name": tr("demo_fridge"), "ip": "192.168.1.102", "type": "plug"},
+        {"name": tr("demo_pv_inverter"), "ip": "192.168.1.103", "type": "pv"},
     ]
     demo_powers = [12.5, 145.0, 80.3, 1850.0]
     added = []
@@ -328,7 +354,7 @@ def add_demo():
 @login_required
 def set_device_automation(device_id):
     if device_id not in DEVICES:
-        return jsonify({"error": "Nicht gefunden"}), 404
+        return jsonify({"error": tr("not_found")}), 404
 
     data = request.get_json() or {}
     auto = DEVICES[device_id].setdefault("automation", default_automation_config())
@@ -363,22 +389,54 @@ def update_automation_settings():
 @app.route("/api/automation/log")
 @login_required
 def get_automation_log():
-    return jsonify(automation_log[:50])
+    return jsonify(serialize_automation_log(get_lang()))
 
 @app.route("/api/automation/run", methods=["POST"])
 @login_required
 def run_automation_now():
     run_automation_cycle()
-    return jsonify({"ok": True, "log": automation_log[:50]})
+    return jsonify({"ok": True, "log": serialize_automation_log(get_lang())})
 
-def log_automation(device_name, action, reason):
+def log_automation(device_name, action, reason_parts, logic="OR"):
     automation_log.insert(0, {
         "ts": datetime.now().isoformat(),
         "device": device_name,
         "action": action,   # "ein" | "aus" | "fehler"
-        "reason": reason,
+        "reason_parts": reason_parts,
+        "logic": logic,
     })
     del automation_log[50:]
+
+def format_automation_reason(entry, lang):
+    t = get_translations(lang)
+    texts = []
+    for part in entry.get("reason_parts", []):
+        kind = part.get("type")
+        if kind == "price":
+            cmp = "≤" if part["ok"] else ">"
+            texts.append(t["automation_reason_price"].format(
+                value=part["value"], cmp=cmp, threshold=part["threshold"]))
+        elif kind == "pv":
+            cmp = "≥" if part["ok"] else "<"
+            texts.append(t["automation_reason_pv"].format(
+                value=part["value"], cmp=cmp, threshold=part["threshold"]))
+        elif kind == "error":
+            return t["device_unreachable"]
+        elif kind == "exception":
+            return part.get("message", "")
+    joiner = t["joiner_and"] if entry.get("logic") == "AND" and len(texts) > 1 else t["joiner_or"]
+    return joiner.join(texts)
+
+def serialize_automation_log(lang):
+    return [
+        {
+            "ts": e["ts"],
+            "device": e["device"],
+            "action": e["action"],
+            "reason": format_automation_reason(e, lang),
+        }
+        for e in automation_log[:50]
+    ]
 
 def run_automation_cycle():
     price_data = get_price_data()
@@ -431,19 +489,22 @@ def run_automation_cycle():
             if devices.set_relay(dev, target):
                 parts = []
                 if price_ok is not None:
-                    parts.append(
-                        f"Preis {current_price:.2f} ct/kWh "
-                        f"{'≤' if price_ok else '>'} {auto.get('price_max_ct', 0):.2f} ct/kWh"
-                    )
+                    parts.append({
+                        "type": "price",
+                        "value": current_price,
+                        "threshold": auto.get("price_max_ct", 0),
+                        "ok": price_ok,
+                    })
                 if pv_ok is not None:
-                    parts.append(
-                        f"PV-Überschuss {pv_total:.0f} W "
-                        f"{'≥' if pv_ok else '<'} {auto.get('pv_min_surplus_w', 0):.0f} W"
-                    )
-                joiner = " UND " if logic == "AND" and len(parts) > 1 else " ODER "
-                log_automation(dev["name"], "ein" if target else "aus", joiner.join(parts))
+                    parts.append({
+                        "type": "pv",
+                        "value": pv_total,
+                        "threshold": auto.get("pv_min_surplus_w", 0),
+                        "ok": pv_ok,
+                    })
+                log_automation(dev["name"], "ein" if target else "aus", parts, logic)
             else:
-                log_automation(dev["name"], "fehler", "Gerät nicht erreichbar")
+                log_automation(dev["name"], "fehler", [{"type": "error"}])
 
 def start_automation_thread():
     global _automation_thread
@@ -456,7 +517,7 @@ def start_automation_thread():
                 if AUTOMATION.get("enabled"):
                     run_automation_cycle()
             except Exception as e:
-                log_automation("System", "fehler", str(e))
+                log_automation("System", "fehler", [{"type": "exception", "message": str(e)}])
             time.sleep(max(60, AUTOMATION.get("interval_sec", 300)))
 
     _automation_thread = threading.Thread(target=loop, daemon=True)

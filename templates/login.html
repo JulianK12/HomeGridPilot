@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="{{ lang }}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HomeGridPilot – Anmelden</title>
+  <title>HomeGridPilot – {{ t.login_title }}</title>
   <link href="{{ url_for('static', filename='fonts/inter.css') }}" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -138,46 +138,81 @@
       color: var(--accent);
       font-size: 12px;
     }
+
+    .lang-switch {
+      position: absolute;
+      top: 16px; right: 16px;
+      display: flex; gap: 4px;
+    }
+    .lang-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 6px;
+      padding: 4px 9px;
+      font-size: 11px; font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: background .12s, color .12s;
+    }
+    .lang-btn:hover { color: var(--text); }
+    .lang-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
   </style>
 </head>
 <body>
   <div class="login-card">
+    <div class="lang-switch">
+      <button type="button" class="lang-btn {{ 'active' if lang == 'de' else '' }}" onclick="setLang('de')">DE</button>
+      <button type="button" class="lang-btn {{ 'active' if lang == 'en' else '' }}" onclick="setLang('en')">EN</button>
+    </div>
+
     <div class="logo">
       <div class="logo-icon">H</div>
       <div>
         <div class="logo-text">HomeGridPilot</div>
-        <div class="logo-sub">Smart Home Steuerung</div>
+        <div class="logo-sub">{{ t.login_brand_sub }}</div>
       </div>
     </div>
 
-    <h1>Willkommen zurück</h1>
-    <p class="subtitle">Melde dich an, um deine Geräte zu steuern.</p>
+    <h1>{{ t.login_welcome }}</h1>
+    <p class="subtitle">{{ t.login_instructions }}</p>
 
     <div class="field">
-      <label>Benutzername</label>
-      <input id="username" type="text" placeholder="Benutzername" autocomplete="username" />
+      <label>{{ t.username }}</label>
+      <input id="username" type="text" placeholder="{{ t.username }}" autocomplete="username" />
     </div>
     <div class="field">
-      <label>Passwort</label>
+      <label>{{ t.password }}</label>
       <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" />
     </div>
 
-    <button class="btn-login" id="loginBtn" onclick="doLogin()">Anmelden</button>
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">{{ t.login_button }}</button>
     <div class="error-msg" id="errorMsg"></div>
 
     <div class="hint">
-      Standard-Zugangsdaten: <code>admin</code> / <code>admin123</code>
+      {{ t.default_credentials }}: <code>admin</code> / <code>admin123</code>
     </div>
   </div>
 
   <script>
+    const I18N = {{ t | tojson }};
+
     document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+    async function setLang(lang) {
+      await fetch('/api/language', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lang })
+      });
+      window.location.reload();
+    }
 
     async function doLogin() {
       const btn = document.getElementById('loginBtn');
       const err = document.getElementById('errorMsg');
       btn.disabled = true;
-      btn.textContent = 'Anmelden…';
+      btn.textContent = I18N.login_button_loading;
       err.classList.remove('show');
 
       const res = await fetch('/api/login', {
@@ -192,10 +227,10 @@
       if (data.ok) {
         window.location.href = '/';
       } else {
-        err.textContent = data.error || 'Anmeldung fehlgeschlagen';
+        err.textContent = data.error || I18N.login_failed;
         err.classList.add('show');
         btn.disabled = false;
-        btn.textContent = 'Anmelden';
+        btn.textContent = I18N.login_button;
       }
     }
   </script>
