@@ -121,7 +121,7 @@ production, evaluates each device's rules, and switches relays accordingly.
 
 - All data (devices, history, price cache, automation log) is kept in memory
   and is lost on restart.
-- Electricity prices come from the free [aWattar API](https://www.awattar.de/) –
+- Electricity prices come from the [aWattar API] (free for aWattar-Clients) (https://www.awattar.de/) –
   no API key required, but subject to their fair-use limits.
 - This project is not affiliated with Shelly/Allterco Robotics, Tasmota,
   TP-Link Technologies (Kasa/Tapo) or aWattar.
