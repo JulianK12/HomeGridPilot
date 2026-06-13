@@ -425,6 +425,23 @@
           <div class="label">Energie heute</div>
           <div class="value"><span id="s-energy">0</span><span class="unit">kWh</span></div>
         </div>
+        <div class="summary-card">
+          <div class="label">Strompreis aktuell</div>
+          <div class="value"><span id="s-price">–</span><span class="unit">ct/kWh</span></div>
+          <div class="trend" id="s-price-time" style="color:var(--muted)"></div>
+        </div>
+        <div class="summary-card" id="pvSummaryCard" style="display:none">
+          <div class="label">☀️ PV-Erzeugung</div>
+          <div class="value"><span id="s-pv">0</span><span class="unit">W</span></div>
+        </div>
+      </div>
+
+      <div class="chart-card" id="priceChartCard" style="margin-bottom:24px; display:none">
+        <h3>⚡ Strompreis heute (aWattar Day-Ahead)</h3>
+        <div class="chart-sub">Aktuelle Stunde hervorgehoben · inkl. Aufschlag, falls in den Einstellungen hinterlegt</div>
+        <div class="chart-wrap" style="height:160px">
+          <canvas id="priceChart"></canvas>
+        </div>
       </div>
 
       <div class="section-header">
@@ -491,6 +508,51 @@
       </div>
 
       <div class="settings-section">
+        <h3>Automatisierung & Strompreis</h3>
+        <div class="settings-row">
+          <div>
+            <div class="s-title">Automatisierung aktiv</div>
+            <div class="s-desc">Globaler Schalter – schaltet Geräte gemäß ihren Regeln (Preis/PV-Überschuss)</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="globalAutoEnabled" onchange="saveAutomationSettings()">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="s-title">Prüfintervall</div>
+            <div class="s-desc">Wie oft Preis & PV geprüft und Geräte geschaltet werden</div>
+          </div>
+          <select id="autoInterval" style="width:120px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:8px;font-family:Inter,sans-serif;font-size:13px;" onchange="saveAutomationSettings()">
+            <option value="60">1 Min.</option>
+            <option value="300">5 Min.</option>
+            <option value="600">10 Min.</option>
+            <option value="900">15 Min.</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="s-title">Preisaufschlag</div>
+            <div class="s-desc">Wird auf den aWattar-Spotpreis addiert (Steuern, Netzgebühren, Marge), in ct/kWh</div>
+          </div>
+          <input id="priceMarkup" type="number" step="0.1" style="width:90px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:8px;font-family:Inter,sans-serif;font-size:13px;" onchange="saveAutomationSettings()">
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="s-title">Jetzt prüfen</div>
+            <div class="s-desc">Automatisierung sofort einmal für alle Geräte ausführen</div>
+          </div>
+          <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;" onclick="runAutomationNow()">▶ Ausführen</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Automatisierungs-Protokoll</h3>
+        <div id="automationLog" style="padding:14px 18px"></div>
+      </div>
+
+      <div class="settings-section">
         <h3>Info</h3>
         <div class="settings-row">
           <div><div class="s-title">Version</div></div>
@@ -526,6 +588,7 @@
         <option value="relay">Shelly 1 / Relais</option>
         <option value="dimmer">Shelly Dimmer</option>
         <option value="em">Shelly EM / Energiemesser</option>
+        <option value="pv">☀️ PV-Anlage / Wechselrichter</option>
       </select>
     </div>
     <div class="modal-actions">
@@ -545,6 +608,66 @@
     </div>
     <div class="modal-actions" style="margin-top:16px">
       <button class="btn btn-ghost" onclick="closeModal('chartModal')">Schließen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Automation Modal ── -->
+<div class="modal-overlay" id="automationModal">
+  <div class="modal">
+    <h2>Automatisierung</h2>
+    <p id="autoModalDeviceName" style="margin-bottom:18px"></p>
+
+    <div class="form-field">
+      <div class="toggle-wrap">
+        <label class="toggle">
+          <input type="checkbox" id="autoEnabled">
+          <span class="slider"></span>
+        </label>
+        <span class="toggle-label">Automatisierung für dieses Gerät aktiv</span>
+      </div>
+    </div>
+
+    <div class="form-field" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px">
+      <div class="toggle-wrap" style="margin-bottom:12px">
+        <label class="toggle">
+          <input type="checkbox" id="autoPriceEnabled">
+          <span class="slider"></span>
+        </label>
+        <span class="toggle-label">Bei niedrigem Strompreis einschalten</span>
+      </div>
+      <label>Maximalpreis (ct/kWh)</label>
+      <input id="autoPriceMax" type="number" step="0.1" min="0" />
+    </div>
+
+    <div class="form-field" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px">
+      <div class="toggle-wrap" style="margin-bottom:12px">
+        <label class="toggle">
+          <input type="checkbox" id="autoPvEnabled">
+          <span class="slider"></span>
+        </label>
+        <span class="toggle-label">Bei PV-Überschuss einschalten</span>
+      </div>
+      <label>Benötigter Überschuss (W)</label>
+      <input id="autoPvSurplus" type="number" step="10" min="0" />
+    </div>
+
+    <div class="form-field">
+      <label>Verknüpfung der Bedingungen</label>
+      <select id="autoLogic">
+        <option value="OR">ODER – eine Bedingung reicht</option>
+        <option value="AND">UND – beide Bedingungen nötig</option>
+      </select>
+    </div>
+
+    <div class="form-field">
+      <label>Priorität bei PV-Überschuss (1 = wird zuerst versorgt)</label>
+      <input id="autoPriority" type="number" min="1" max="99" />
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('automationModal')">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveAutomation()">Speichern</button>
     </div>
   </div>
 </div>
@@ -584,6 +707,7 @@ function showView(id, el) {
   document.getElementById('viewSubtitle').textContent = sub;
   if (id === 'analytics') renderAnalytics();
   if (id === 'devices')   renderDevicesList();
+  if (id === 'settings')  { loadAutomationSettings(); loadAutomationLog(); }
 }
 
 // ─────────────────────────────────────────────
@@ -661,10 +785,12 @@ function createDeviceCard(d) {
   el.className = 'device-card' + (d.online ? '' : ' offline');
   el.id = 'card-' + d.id;
 
+  const isPv = d.type === 'pv';
+
   el.innerHTML = `
     <div class="device-card-header">
       <div>
-        <div class="device-name">${esc(d.name)}</div>
+        <div class="device-name">${isPv ? '☀️ ' : ''}${esc(d.name)}</div>
         <div class="device-ip">${esc(d.ip)}</div>
       </div>
       <div class="status-dot ${d.online ? 'online' : 'offline'}" id="dot-${d.id}" title="${d.online ? 'Online' : 'Offline'}"></div>
@@ -702,10 +828,16 @@ function createDeviceCard(d) {
       <span class="toggle-label" id="relay-label-${d.id}">${d.relay_on ? 'Ein' : 'Aus'}</span>
 
       <button class="btn-chart" onclick="openChart('${d.id}')">📈 Verlauf</button>
+      ${isPv ? '' : `<button class="btn-chart" id="auto-btn-${d.id}" onclick="openAutomationModal('${d.id}')">${automationLabel(d)}</button>`}
       <button class="btn-delete" onclick="deleteDevice('${d.id}')" title="Entfernen">🗑</button>
     </div>
   `;
   return el;
+}
+
+function automationLabel(d) {
+  const a = d.automation || {};
+  return a.enabled ? '🤖 Automatik: An' : '🤖 Automatik';
 }
 
 function updateDeviceCard(d) {
@@ -728,21 +860,101 @@ function updateDeviceCard(d) {
   const lbl = document.getElementById('relay-label-' + d.id);
   if (lbl) lbl.textContent = d.relay_on ? 'Ein' : 'Aus';
 
+  const autoBtn = document.getElementById('auto-btn-' + d.id);
+  if (autoBtn) autoBtn.textContent = automationLabel(d);
+
   updateSparkline(d.id);
 }
 
 function renderSummary() {
+  const consumers = allDevices.filter(d => d.type !== 'pv');
+  const pvDevices = allDevices.filter(d => d.type === 'pv');
+
   const total   = allDevices.length;
   const online  = allDevices.filter(d => d.online).length;
-  const power   = allDevices.reduce((s, d) => s + (d.power_w || 0), 0);
-  const energy  = allDevices.reduce((s, d) => s + (d.energy_kwh || 0), 0);
+  const power   = consumers.reduce((s, d) => s + (d.power_w || 0), 0);
+  const energy  = consumers.reduce((s, d) => s + (d.energy_kwh || 0), 0);
+  const pvTotal = pvDevices.reduce((s, d) => s + (d.online ? (d.power_w || 0) : 0), 0);
 
   document.getElementById('s-total').textContent  = total;
   document.getElementById('s-online').textContent = online;
   document.getElementById('s-power').textContent  = power.toFixed(1);
   document.getElementById('s-energy').textContent = energy.toFixed(3);
   document.getElementById('deviceCount').textContent = total;
+
+  const pvCard = document.getElementById('pvSummaryCard');
+  if (pvDevices.length) {
+    pvCard.style.display = '';
+    document.getElementById('s-pv').textContent = pvTotal.toFixed(1);
+  } else {
+    pvCard.style.display = 'none';
+  }
 }
+
+// ─────────────────────────────────────────────
+// Strompreis (aWattar)
+// ─────────────────────────────────────────────
+let priceChart = null;
+
+async function loadPrice() {
+  try {
+    const r = await fetch('/api/price');
+    const d = await r.json();
+    renderPrice(d);
+  } catch (e) {}
+}
+
+function renderPrice(d) {
+  const priceEl = document.getElementById('s-price');
+  const timeEl  = document.getElementById('s-price-time');
+  if (d.effective_ct_per_kwh != null) {
+    priceEl.textContent = d.effective_ct_per_kwh.toFixed(2);
+    const current = (d.today || []).find(h => h.is_current);
+    timeEl.textContent = current ? `Stunde ${current.hour}` : '';
+  } else {
+    priceEl.textContent = '–';
+    timeEl.textContent = 'Preisdaten nicht verfügbar';
+  }
+
+  if (d.today && d.today.length) {
+    document.getElementById('priceChartCard').style.display = '';
+    renderPriceChart(d);
+  }
+}
+
+function renderPriceChart(d) {
+  const markup = d.markup_ct || 0;
+  const labels = d.today.map(h => h.hour);
+  const values = d.today.map(h => round2(h.price_ct + markup));
+  const colors = d.today.map(h => h.is_current ? '#f97316' : 'rgba(249,115,22,0.25)');
+
+  if (priceChart) {
+    priceChart.data.labels = labels;
+    priceChart.data.datasets[0].data = values;
+    priceChart.data.datasets[0].backgroundColor = colors;
+    priceChart.update();
+    return;
+  }
+
+  priceChart = new Chart(document.getElementById('priceChart'), {
+    type: 'bar',
+    data: { labels, datasets: [{ data: values, backgroundColor: colors, borderRadius: 3 }] },
+    options: {
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y.toFixed(2)} ct/kWh` } }
+      },
+      scales: {
+        x: { ticks: { color: '#8b949e', font: { size: 10 } }, grid: { display: false } },
+        y: { ticks: { color: '#8b949e', font: { size: 10 }, callback: v => v + ' ct' }, grid: { color: '#30363d' } }
+      },
+      responsive: true,
+      maintainAspectRatio: false,
+    }
+  });
+}
+
+function round2(n) { return Math.round(n * 100) / 100; }
 
 // ─────────────────────────────────────────────
 // Sparkline
@@ -983,6 +1195,61 @@ function renderDevicesList() {
 }
 
 // ─────────────────────────────────────────────
+// Automatisierung (pro Gerät)
+// ─────────────────────────────────────────────
+let automationDeviceId = null;
+
+function openAutomationModal(id) {
+  const dev = allDevices.find(d => d.id === id);
+  if (!dev) return;
+  automationDeviceId = id;
+  const a = dev.automation || {};
+
+  document.getElementById('autoModalDeviceName').textContent =
+    `Regeln für „${dev.name}“ – wird automatisch ein-/ausgeschaltet, solange die Automatisierung aktiv ist.`;
+  document.getElementById('autoEnabled').checked      = !!a.enabled;
+  document.getElementById('autoPriceEnabled').checked = !!a.price_enabled;
+  document.getElementById('autoPriceMax').value       = a.price_max_ct ?? 15;
+  document.getElementById('autoPvEnabled').checked    = !!a.pv_enabled;
+  document.getElementById('autoPvSurplus').value      = a.pv_min_surplus_w ?? 200;
+  document.getElementById('autoLogic').value          = a.logic || 'OR';
+  document.getElementById('autoPriority').value       = a.priority ?? 10;
+
+  document.getElementById('automationModal').classList.add('show');
+}
+
+async function saveAutomation() {
+  if (!automationDeviceId) return;
+  const payload = {
+    enabled:          document.getElementById('autoEnabled').checked,
+    price_enabled:    document.getElementById('autoPriceEnabled').checked,
+    price_max_ct:     parseFloat(document.getElementById('autoPriceMax').value) || 0,
+    pv_enabled:       document.getElementById('autoPvEnabled').checked,
+    pv_min_surplus_w: parseFloat(document.getElementById('autoPvSurplus').value) || 0,
+    logic:            document.getElementById('autoLogic').value,
+    priority:         parseInt(document.getElementById('autoPriority').value, 10) || 10,
+  };
+
+  const r = await fetch(`/api/devices/${automationDeviceId}/automation`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  const data = await r.json();
+  if (data.ok) {
+    const dev = allDevices.find(d => d.id === automationDeviceId);
+    if (dev) {
+      dev.automation = data.automation;
+      updateDeviceCard(dev);
+    }
+    closeModal('automationModal');
+    toast('✅ Automatisierung gespeichert', 'success');
+  } else {
+    toast('❌ Fehler beim Speichern', 'error');
+  }
+}
+
+// ─────────────────────────────────────────────
 // Relay
 // ─────────────────────────────────────────────
 async function setRelay(id, on) {
@@ -1077,6 +1344,61 @@ function updateInterval() {
 }
 
 // ─────────────────────────────────────────────
+// Automatisierung (global) + Protokoll
+// ─────────────────────────────────────────────
+async function loadAutomationSettings() {
+  const r = await fetch('/api/automation/settings');
+  const d = await r.json();
+  document.getElementById('globalAutoEnabled').checked = !!d.enabled;
+  document.getElementById('autoInterval').value = d.interval_sec;
+  document.getElementById('priceMarkup').value = d.price_markup_ct;
+}
+
+async function saveAutomationSettings() {
+  const payload = {
+    enabled: document.getElementById('globalAutoEnabled').checked,
+    interval_sec: parseInt(document.getElementById('autoInterval').value, 10),
+    price_markup_ct: parseFloat(document.getElementById('priceMarkup').value) || 0,
+  };
+  await fetch('/api/automation/settings', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  toast('⚙️ Automatisierungseinstellungen gespeichert', 'success');
+  loadPrice(); // Aufschlag beeinflusst den angezeigten effektiven Preis
+}
+
+async function runAutomationNow() {
+  const r = await fetch('/api/automation/run', {method: 'POST'});
+  await r.json();
+  toast('▶ Automatisierung ausgeführt', 'success');
+  await loadAutomationLog();
+  await refreshAll();
+}
+
+async function loadAutomationLog() {
+  const r = await fetch('/api/automation/log');
+  const log = await r.json();
+  const el = document.getElementById('automationLog');
+  if (!el) return;
+  if (!log.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px">Noch keine Aktionen protokolliert.</div>';
+    return;
+  }
+  el.innerHTML = log.map(e => {
+    const icon = e.action === 'ein' ? '🟢 eingeschaltet' : e.action === 'aus' ? '🔴 ausgeschaltet' : '⚠️ Fehler';
+    return `
+      <div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+        <span style="color:var(--muted)">${esc(e.ts.slice(0,16).replace('T',' '))}</span>
+        — <strong>${esc(e.device)}</strong> ${icon}
+        <div style="color:var(--muted);font-size:12px;margin-top:2px">${esc(e.reason)}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────
 // Modal / Toast helpers
 // ─────────────────────────────────────────────
 function closeModal(id) {
@@ -1109,7 +1431,9 @@ function esc(str) {
   await loadUser();
   await loadDevices();
   await refreshAll();
+  await loadPrice();
   refreshTimer = setInterval(refreshAll, INTERVAL);
+  setInterval(loadPrice, 5 * 60 * 1000); // Strompreis alle 5 Min. aktualisieren
 })();
 </script>
 </body>
