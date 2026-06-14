@@ -1,4 +1,4 @@
-# UI translations for HomeGridPilot.
+# UI translations for KrenPi.
 
 
 TRANSLATIONS = {

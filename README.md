@@ -1,4 +1,4 @@
-# HomeGridPilot
+# KrenPi
 
 A small Flask web app for monitoring and controlling smart plugs/relays,
 with optional automation based on dynamic electricity prices (aWattar Germany)
