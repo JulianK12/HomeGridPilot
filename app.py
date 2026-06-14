@@ -11,6 +11,7 @@ import threading
 from functools import wraps
 
 import devices
+import db
 from translations import TRANSLATIONS, get_translations
 
 load_dotenv()
@@ -31,7 +32,6 @@ app.config.update(
     PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
 )
 
-# no real database for now, just keep everything in memory
 admin_username = os.environ.get("ADMIN_USERNAME", "admin")
 admin_password = os.environ.get("ADMIN_PASSWORD")
 if not admin_password:
@@ -51,19 +51,16 @@ LOGIN_ATTEMPTS = {}
 MAX_LOGIN_ATTEMPTS = 5
 LOGIN_LOCKOUT_SECONDS = 300
 
-DEVICES = {}           # id -> device config
-power_history = {}     # id -> list of {ts, watt}
+# persisted in SQLite (see db.py); loaded into memory at startup and
+# written through on every change
+db.init_db()
+DEVICES = db.load_devices()              # id -> device config
+power_history = db.load_power_history()  # id -> list of {ts, watt}
+AUTOMATION = db.load_automation_settings()  # global automation switch + settings
+automation_log = db.load_automation_log()   # most recent first, capped at 50
 
 # cache for the aWattar day-ahead prices
 PRICE_CACHE = {"data": [], "fetched_at": 0}
-
-# global switch + settings for the automation loop
-AUTOMATION = {
-    "enabled": False,
-    "interval_sec": 300,
-    "price_markup_ct": 0.0,
-}
-automation_log = []   # most recent first, capped at 50
 _automation_thread = None
 
 def default_automation_config():
@@ -200,6 +197,7 @@ def add_device():
     }
     DEVICES[device_id] = device
     power_history[device_id] = []
+    db.save_device(device)
     return jsonify(device), 201
 
 @app.route("/api/devices/<device_id>", methods=["DELETE"])
@@ -208,6 +206,7 @@ def delete_device(device_id):
     if device_id in DEVICES:
         del DEVICES[device_id]
         power_history.pop(device_id, None)
+        db.delete_device(device_id)
         return jsonify({"ok": True})
     return jsonify({"error": tr("not_found")}), 404
 
@@ -223,9 +222,13 @@ def device_status(device_id):
 
     # Store power history (keep last 60 entries)
     history = power_history.setdefault(device_id, [])
-    history.append({"ts": datetime.now().isoformat(), "watt": status["power_w"]})
+    entry = {"ts": datetime.now().isoformat(), "watt": status["power_w"]}
+    history.append(entry)
     if len(history) > 60:
         history.pop(0)
+
+    db.save_device(device)
+    db.add_power_history_entry(device_id, entry["ts"], entry["watt"])
 
     return jsonify(device)
 
@@ -240,6 +243,7 @@ def set_relay(device_id):
     device = DEVICES[device_id]
 
     if devices.set_relay(device, turn_on):
+        db.save_device(device)
         return jsonify({"ok": True, "relay_on": turn_on})
     return jsonify({"ok": False, "error": tr("device_unreachable")}), 503
 
@@ -347,6 +351,8 @@ def add_demo():
                 ts = (datetime.now() - timedelta(minutes=60 - m)).isoformat()
                 hist.append({"ts": ts, "watt": round(base + random.uniform(-base * 0.2, base * 0.2), 1)})
             power_history[device_id] = hist
+            db.save_device(device)
+            db.replace_power_history(device_id, hist)
             added.append(device)
     return jsonify({"added": len(added)})
 
@@ -367,6 +373,7 @@ def set_device_automation(device_id):
     auto["pv_min_surplus_w"] = float(data.get("pv_min_surplus_w", auto["pv_min_surplus_w"]))
     auto["priority"] = int(data.get("priority", auto["priority"]))
 
+    db.save_device(DEVICES[device_id])
     return jsonify({"ok": True, "automation": auto})
 
 @app.route("/api/automation/settings", methods=["GET"])
@@ -384,6 +391,7 @@ def update_automation_settings():
         AUTOMATION["interval_sec"] = max(60, int(data["interval_sec"]))
     if "price_markup_ct" in data:
         AUTOMATION["price_markup_ct"] = float(data["price_markup_ct"])
+    db.save_automation_settings(AUTOMATION)
     return jsonify({"ok": True, "settings": AUTOMATION})
 
 @app.route("/api/automation/log")
@@ -398,14 +406,16 @@ def run_automation_now():
     return jsonify({"ok": True, "log": serialize_automation_log(get_lang())})
 
 def log_automation(device_name, action, reason_parts, logic="OR"):
-    automation_log.insert(0, {
+    entry = {
         "ts": datetime.now().isoformat(),
         "device": device_name,
         "action": action,   # "ein" | "aus" | "fehler"
         "reason_parts": reason_parts,
         "logic": logic,
-    })
+    }
+    automation_log.insert(0, entry)
     del automation_log[50:]
+    db.insert_automation_log(entry)
 
 def format_automation_reason(entry, lang):
     t = get_translations(lang)
@@ -448,6 +458,7 @@ def run_automation_cycle():
         if dev.get("type") == "pv":
             status = devices.fetch_status(dev)
             dev.update(status)
+            db.save_device(dev)
             if dev.get("online"):
                 pv_total += dev.get("power_w", 0.0)
 
@@ -487,6 +498,7 @@ def run_automation_cycle():
 
         if dev.get("relay_on") != target:
             if devices.set_relay(dev, target):
+                db.save_device(dev)
                 parts = []
                 if price_ok is not None:
                     parts.append({

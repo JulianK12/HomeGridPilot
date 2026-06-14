@@ -119,8 +119,11 @@ production, evaluates each device's rules, and switches relays accordingly.
 
 ## Notes
 
-- All data (devices, history, price cache, automation log) is kept in memory
-  and is lost on restart.
+- Devices, their automation rules, power history, global automation settings
+  and the automation log are persisted in a local SQLite database
+  (`data.db`, created automatically on first run, git-ignored). The
+  electricity price cache and login-lockout state remain in memory only and
+  are rebuilt after a restart.
 - Electricity prices come from the [aWattar API] (free for aWattar-Clients) (https://www.awattar.de/) –
   no API key required, but subject to their fair-use limits.
 - This project is not affiliated with Shelly/Allterco Robotics, Tasmota,
